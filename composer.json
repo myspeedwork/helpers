@@ -1,0 +1,20 @@
+{
+    "name": "speedwork/helpers",
+    "type": "library",
+    "description": "Speedwork Helpers",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "sankar",
+            "email": "sankar.suda@gmail.com"
+        }
+    ],
+    "require": {
+        "php" : ">=5.4"
+    },
+    "autoload" : {
+        "psr-4": { "Speedwork\\Helpers\\": "src" }
+    },
+    "minimum-stability": "dev",
+    "preferred-install": "dist"
+}
