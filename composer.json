@@ -10,7 +10,8 @@
         }
     ],
     "require": {
-        "php" : ">=5.4"
+        "php" : ">=5.4",
+        "speedwork/core" : "dev-master"
     },
     "autoload" : {
         "psr-4": { "Speedwork\\Helpers\\": "src" }
