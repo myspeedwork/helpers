@@ -12,7 +12,6 @@
 namespace Speedwork\Helpers;
 
 use Smarty as BaseSmarty;
-use Smarty_Security;
 use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 use Speedwork\Util\Router as BaseRouter;
@@ -20,21 +19,6 @@ use Speedwork\Util\Router as BaseRouter;
 /**
  * @author sankar <sankar.suda@gmail.com>
  */
-class SmartySecurity extends Smarty_Security
-{
-    public $php_handling    = BaseSmarty::PHP_REMOVE;
-    public $static_classes  = 'none';
-    public $streams         = null;
-    public $allow_constants = false;
-     // allow everthing as modifier
-    public $modifiers = [];
-
-    public function isTrustedResourceDir($filepath)
-    {
-        return true;
-    }
-}
-
 class Smarty extends Helper
 {
     private $smarty;
@@ -48,7 +32,7 @@ class Smarty extends Helper
         $this->set('engine', $smarty);
 
         $smarty->allow_php_templates = false;
-        $smarty->enableSecurity('System\\Helpers\\SmartySecurity');
+        $smarty->enableSecurity('Speedwork\\Helpers\\SmartySecurity');
 
         $smarty->template_dir = _TMP_BASE;
         $smarty->compile_dir  = STORAGE.'views'.DS;
