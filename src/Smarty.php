@@ -31,17 +31,11 @@ class Smarty extends Helper
         //register object for global use
         $this->set('engine', $smarty);
 
-        $smarty->allow_php_templates = false;
         $smarty->enableSecurity('Speedwork\\Helpers\\SmartySecurity');
-
-        $smarty->template_dir = _TMP_BASE;
-        $smarty->compile_dir  = STORAGE.'views'.DS;
-        $smarty->config_dir   = STORAGE.'configs'.DS;
-        $smarty->cache_dir    = CACHE;
-
-        // Production mode
-        $smarty->debugging      = false;
-        $smarty->debugging_ctrl = 'NONE';
+        $smarty->setTemplateDir(STORAGE);
+        $smarty->setCompileDir(STORAGE.'views'.DS);
+        $smarty->setConfigDir(STORAGE.'configs'.DS);
+        $smarty->setCacheDir(CACHE);
 
         //register smarty functions
         $smarty->registerPlugin('function', 'speed', [$this, 'execute']);
@@ -79,27 +73,27 @@ class Smarty extends Helper
                 $data .= 'style="display:none"';
             }
             $data .= '>';
-            $data .= '<i class="fa fa-ban fa-lg help-tip" title="Click to Approve"></i></a>';
+            $data .= '<i class="fa fa-ban fa-lg" role="tooltip" title="Click to Approve"></i></a>';
 
             $data .= '<a data-status="0"';
             if ($status == 0) {
                 $data .= 'style="display:none"';
             }
             $data .= '>';
-            $data .= '<i class="fa fa-check fa-lg help-tip" title="Click to unapprove"></i></a>';
+            $data .= '<i class="fa fa-check fa-lg" role="tooltip" title="Click to unapprove"></i></a>';
 
             return $data;
         }
 
         if ($status == 1) {
-            return '<a><i class="fa fa-lg fa-check" title="Active"></i></a>';
+            return '<a><i class="fa fa-lg fa-check" role="tooltip" title="Active"></i></a>';
         }
 
         if ($status == 9) {
-            return '<a><i class="fa fa-lg fa-trash-o" title="Deleted"></i></a>';
+            return '<a><i class="fa fa-lg fa-trash-o" role="tooltip" title="Deleted"></i></a>';
         }
 
-        return '<a><i class="fa fa-lg fa-ban" title="InActive"></i></a>';
+        return '<a><i class="fa fa-lg fa-ban" role="tooltip" title="InActive"></i></a>';
     }
 
     /*
