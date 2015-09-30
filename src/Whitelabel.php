@@ -68,7 +68,6 @@ class Whitelabel
 
         foreach ($paths as $path) {
             if (file_exists($path)) {
-                //$template->render($path);
                 $content = @file_get_contents($path);
                 echo $this->_parseContent($content);
                 break;
