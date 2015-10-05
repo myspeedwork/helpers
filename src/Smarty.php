@@ -21,15 +21,9 @@ use Speedwork\Util\Router as BaseRouter;
  */
 class Smarty extends Helper
 {
-    private $smarty;
-
     public function init()
     {
-        $smarty       = new BaseSmarty();
-        $this->smarty = $smarty;
-
-        //register object for global use
-        $this->set('engine', $smarty);
+        $smarty = new BaseSmarty();
 
         $smarty->enableSecurity('Speedwork\\Helpers\\SmartySecurity');
         $smarty->setTemplateDir(STORAGE);
@@ -41,6 +35,8 @@ class Smarty extends Helper
         $smarty->registerPlugin('function', 'speed', [$this, 'execute']);
         $smarty->registerPlugin('modifier', 'todate', [$this, 'modifierTodate']);
         $smarty->registerPlugin('modifier', 'status', [$this, 'modifierStatus']);
+
+        return $smarty;
     }
 
     public function modifierTodate($time, $format = null)
