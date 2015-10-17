@@ -35,8 +35,17 @@ class Smarty extends Helper
         $smarty->registerPlugin('function', 'speed', [$this, 'execute']);
         $smarty->registerPlugin('modifier', 'todate', [$this, 'modifierTodate']);
         $smarty->registerPlugin('modifier', 'status', [$this, 'modifierStatus']);
+        $smarty->registerPlugin('modifier', 'dashed', [$this, 'modifierDashed']);
 
         return $smarty;
+    }
+
+    public function modifierDashed($string)
+    {
+        $string = strip_tags($string);
+        $string = preg_replace('/[^\da-z]/i', '-', $string);
+
+        return $string;
     }
 
     public function modifierTodate($time, $format = null)

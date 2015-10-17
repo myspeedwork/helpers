@@ -277,21 +277,13 @@ class Email extends Helper
         $theme    = ($theme) ? $theme : 'emailer.tpl';
         $template = $path.$theme;
 
-        if (!is_object($this->engine)) {
-            $this->get('resolver')->helper('smarty')->init();
-        }
-
         if (file_exists($filename)) {
-            foreach ($tags as $key => $val) {
-                $this->engine->assign($key, $val);
-            }
-
             if (file_exists($template)) {
-                $emailTemplate = $this->engine->fetch($template);
+                $emailTemplate = $this->get('engine')->create($template, $tags)->render();
             }
 
             $filename       = str_replace('.html', '.tpl', $filename);
-            $html           = $this->engine->fetch($filename);
+            $html           = $this->get('engine')->create($filename, $tags)->render();
             $return['text'] = $html;
 
             //key for backup

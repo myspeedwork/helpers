@@ -175,9 +175,9 @@ class Router extends Helper
             return $url.$link;
         }
 
-        $k = $option.':'.$view;
+        $k   = $option.':'.$view;
+        $uri = null;
 
-        $short = false;
         if ($this->_short) {
             //for short
             $key    = $this->_config[$k];
@@ -193,21 +193,24 @@ class Router extends Helper
                 $shorturl = $this->setUrl(['option' => $k, 'uniqid' => $id]);
 
                 if ($shorturl) {
-                    $link  = $shorturl;
-                    $short = true;
+                    $uri = $shorturl;
                 }
             }
         }
 
         //if not found short url check router
-        if ($this->_router && $short == false) {
-            $link = $this->setRouter($link);
+        if ($this->_router && empty($uri)) {
+            $uri = $this->setRouter($link);
         }
 
-        //if not found short url check seo
-        if ($this->_seo  && $short == false) {
-            $link = $this->setSeoNormal($parts);
+        if ($this->_seo && empty($uri)) {
+            $uri = $this->setSeoNormal($parts);
         }
+
+        if (!empty($uri)) {
+            $link = $uri;
+        }
+
         //check is domain change
         $checked = false;
 
@@ -390,7 +393,7 @@ class Router extends Helper
         // Loop through the route array looking for wild-cards
         foreach ($this->routes as $key => $val) {
             // Convert wild-cards to RegEx
-            $key = str_replace([':any',':num'], ['.+','[0-9]+'], $key);
+            $key = str_replace([':any',':num'], ['.+', '[0-9]+'], $key);
 
             // Does the RegEx match?
             if (preg_match('#^'.$key.'$#', $uri)) {
@@ -415,10 +418,9 @@ class Router extends Helper
         // Loop through all routes to check for back-references, then see if the user-supplied URI matches one
         foreach ($this->routes as $key => $val) {
             // bailing if route contains ungrouped regex, otherwise this fails badly
-            if (preg_match('/[^\(][.+?{\:]/', $key)) {
+            /*if (preg_match('/[^\(][.+?{\:]/', $key)) {
                 continue;
-            }
-
+            }*/
             // Do we have a back-reference?
             if (strpos($val, '$') !== false && strpos($key, '(') !== false) {
                 // Find all back-references in custom route and CI route
@@ -452,12 +454,11 @@ class Router extends Helper
                 }
 
                 // replace :any and :num with .+ and [0-9]+, respectively
-                $uriRegex = str_replace(':any', '.+', str_replace(':num', '[0-9]+', $uriRegex));
+                $uriRegex = str_replace([':any',':num'], ['.+', '[0-9]+'], $uriRegex);
 
                 // regex creation is finished.  Test it against uri
                 if (preg_match('#^'.$uriRegex.'$#', $uri)) {
                     // A match was found.  We can now build the custom URI
-
                     // We need to create a custom route back-referenced regex, to plug user's uri params into the new routed uri.
                     // First, find all custom route strings between capture groups
                     $key = str_replace(':any', '.+', str_replace(':num', '[0-9]+', $key));
@@ -481,17 +482,15 @@ class Router extends Helper
 
                     All that's left to do is create the custom URI, and return the site_url
                     */
-                    $customURI = preg_replace('#^'.$uriRegex.'$#', $replacement, $uri);
-
-                    return $customURI;
+                    return preg_replace('#^'.$uriRegex.'$#', $replacement, $uri);
                 }
             } elseif ($val == $uri) {
                 // If there is a literal match AND no back-references are setup, and we are done
-                return  $key;
+                return $key;
             }
         }
 
-        return  $uri;
+        return false;
     }
 
   /* SEO NORMAL
@@ -501,15 +500,14 @@ class Router extends Helper
     {
         $option = $parts['option'];
         if (empty($option)) {
-            return $link;
+            return false;
         }
 
         $view = $parts['view'];
         unset($parts['option'], $parts['view']);
-        $q    = http_build_query($parts);
-        $link = $option.(($view) ? '/'.$view : '').(($q) ? '?'.$q : '');
+        $q = http_build_query($parts);
 
-        return $link;
+        return $option.(($view) ? '/'.$view : '').(($q) ? '?'.$q : '');
     }
 
     public function getSeoNormal($url)
