@@ -29,7 +29,7 @@ class Geo
         $geocoder = new \Geocoder\ProviderAggregator();
         $adapter  = new \Ivory\HttpAdapter\CurlHttpAdapter();
 
-        $reader        = new \GeoIp2\Database\Reader(_PUBLIC_DIR.'/'.$db);
+        $reader        = new \GeoIp2\Database\Reader(STORAGE.'/'.$db);
         $geoIP2Adapter = new \Geocoder\Adapter\GeoIP2Adapter($reader);
 
         $chain = new \Geocoder\Provider\Chain([

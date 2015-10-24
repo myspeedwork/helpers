@@ -42,8 +42,9 @@ class Smarty extends Helper
 
     public function modifierDashed($string)
     {
-        $string = strip_tags($string);
+        $string = trim(strip_tags($string));
         $string = preg_replace('/[^\da-z]/i', '-', $string);
+        $string = trim($string, '-');
 
         return $string;
     }
