@@ -116,10 +116,12 @@ class Menu extends Helper
     {
         $property = [];
 
-        $link       = ($data['link']) ? $data['link'] : '#';
-        $attributes = (array) json_decode($data['attributes'], true);
+        $link         = ($data['link']) ? $data['link'] : '#';
+        $attributes   = (array) json_decode($data['attributes'], true);
+        $data['slug'] = preg_replace('/[^\da-z]/i', '-', strtolower($data['name']));
 
         $link = str_replace('{id}', $data['menu_id'], $link);
+        $link = str_replace('{name}', $data['slug'], $link);
 
         //replace url
         $matches = [];
