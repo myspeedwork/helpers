@@ -13,7 +13,6 @@ namespace Speedwork\Helpers;
 
 use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
-use Speedwork\Core\Registry;
 use Speedwork\Util\Utility;
 
 /**
@@ -21,70 +20,79 @@ use Speedwork\Util\Utility;
  */
 class Metainfo extends Helper
 {
-    public $enable = true;
-
     public function index()
     {
-        if (!$this->enable) {
+        $config = Configure::read('metainfo');
+
+        if (!is_array($config)) {
             return false;
         }
 
-        $canonicals = Registry::get('canonical');
-        if ($canonicals && is_array($canonicals)) {
-            foreach ($canonicals as $k => $link) {
-                if (!preg_match('/(http|https):\/\//', $link) && substr($link, 0, 2) != '//') {
-                    $link = _URL.$link;
-                }
-                $this->get('template')->addHeadLink($link, 'canonical');
+        if ($config['enable'] !== true) {
+            return false;
+        }
+
+        $option    = $this->get('option');
+        $view      = $this->get('view');
+        $component = null;
+
+        $matches = [
+            $option.':'.$view,
+            $option.':',
+            $option.':*',
+        ];
+
+        $component  = $option.':'.$view;
+        $components = $config['components'];
+
+        foreach ($matches as $match) {
+            $uniqid = $components[$match]['uniqid'];
+            if ($uniqid) {
+                $component = $match;
+                break;
             }
         }
 
-        $conf = Configure::read('metainfo_url_config');
+        $id  = $this->get[$uniqid];
+        $id  = ($id) ? $id : '';
+        $row = $this->getMetainfo($id, $component);
 
-        if (!is_array($conf)) {
-            return false;
+        if ($row['title']) {
+            $this->get('template')->setTitle($row['title']);
+            $this->get('template')->setMetaData('og:title', $row['title'], 'property');
         }
 
-        $option = $this->option;
-        $view   = $this->view;
-        $option = str_replace('com_', '', $option);
-
-        $k = $option.':'.$view;
-
-        //for short
-        $key    = $conf[$k];
-        $uniqid = $key['uniqid'];
-        if ($uniqid == '') {
-            $key    = $conf[$option.':*'];
-            $uniqid = $key['uniqid'];
+        if ($row['keywords']) {
+            $this->get('template')->setKeywords($row['keywords']);
         }
 
-        //$this->get('template')->setMetaData('og:url',$linkallreviews,'property');
+        if ($row['descn']) {
+            $this->get('template')->setDescription($row['descn']);
+            $this->get('template')->setMetaData('og:description', $row['descn'], 'property');
+        }
 
-        if ($uniqid):
-            $id = $_GET[$uniqid];
-        $id     = ($id == 'none') ? '' : $id;
-        $meta   = $this->getMetainfo($id, $k);
-        if ($meta['meta_title']) {
-            $this->get('template')->setTitle($meta['meta_title']);
-            $this->get('template')->setMetaData('og:title', $meta['meta_title'], 'property');
+        if ($row['canonical']) {
+            $this->get('template')->addHeadLink($this->link($row['canonical']), 'canonical');
         }
-        if ($meta['meta_keywords']) {
-            $this->get('template')->setKeywords($meta['meta_keywords']);
+
+        $metas = json_decode($row['meta'], true);
+        if (is_array($metas)) {
+            foreach ($metas as $meta) {
+                $this->get('template')->setMetaData($meta['name'], $meta['content'], $meta['type']);
+            }
         }
-        if ($meta['meta_descn']) {
-            $this->get('template')->setDescription($meta['meta_descn']);
-            $this->get('template')->setMetaData('og:description', $meta['meta_descn'], 'property');
-        }
-        endif;
-        //end short
     }
 
-    public function save($save = [], $condition = [])
+    public function getMetainfo($uniqid = '', $option = '')
     {
+        return $this->database->find('#__addon_metainfo', 'first', [
+            'conditions' => ['uniqid' => $uniqid, 'component' => $option, 'status' => 1],
+        ]);
+    }
 
-        //sanitize short url
-        $parts          = Utility::parseQuery($save['original_url']);
+    public function parseUrl($url)
+    {
+        $parts          = Utility::parseQuery($url);
         $save['option'] = $parts['option'];
         $save['view']   = $parts['view'];
         $save['option'] = str_replace('com_', '', $save['option']);
@@ -106,43 +114,6 @@ class Metainfo extends Helper
             return false;
         }
 
-        //validate
-        if (empty($save['meta_title'])) {
-            return false;
-        }
-
-        $id = $save['id'];
-        unset($save['id']);
-
-        $save['option'] = $save['option'].':'.$save['view'];
-        unset($save['view']);
-
-        if (count($condition) > 0) {
-            //check already exists
-            $condition['option'] = $save['option'];
-            $row                 = $this->database->find('#__addon_metainfo', 'first', ['conditions' => $condition]);
-            $id                  = $row['id'];
-        }
-
-        if ($id) {
-            return $this->database->update('#__addon_metainfo', $save, ['id' => $id]);
-        } else {
-            $save['added'] = time();
-
-            return $this->database->save('#__addon_metainfo', $save);
-        }
-    }
-
-    public function getMetainfo($uniq_id, $option = '')
-    {
-        $option = (empty($option)) ? $this->option.':'.$this->view : $option;
-
-        $data = $this->database->find('#__addon_metainfo', 'first', ['conditions' => ['uniqueid' => $uniq_id,
-                                                                                            'option' => $option,
-                                                                                            ],
-                                                                          ]
-                                        );
-
-        return $data;
+        return $save;
     }
 }

@@ -13,7 +13,6 @@ namespace Speedwork\Helpers;
 
 use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
-use Speedwork\Core\Registry;
 use Speedwork\Util\Router as BaseRouter;
 use Speedwork\Util\Utility;
 
@@ -137,8 +136,6 @@ class Router extends Helper
             $url = 'index.php?option=errors';
         }
 
-        Registry::set('canonical', [$url]);
-
         if ($type == '301') {
             //Permanent (301)
             header('HTTP/1.1 301 Moved Permanently');
@@ -158,8 +155,10 @@ class Router extends Helper
         parse_str($var, $var);
 
         foreach ($var as $key => $val) {
-            $_REQUEST[$key] = $val;
-            $_GET[$key]     = $val;
+            $_REQUEST[$key]   = $val;
+            $_GET[$key]       = $val;
+            $this->data[$key] = $val;
+            $this->get[$key]  = $val;
         }
 
         unset($val);

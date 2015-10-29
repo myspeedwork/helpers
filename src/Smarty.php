@@ -44,7 +44,7 @@ class Smarty extends Helper
     {
         $string = trim(strip_tags($string));
         $string = preg_replace('/[^\da-z]/i', '-', $string);
-        $string = trim($string, '-');
+        $string = strtolower(trim($string, '-'));
 
         return $string;
     }
