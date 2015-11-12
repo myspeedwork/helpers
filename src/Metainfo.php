@@ -60,6 +60,8 @@ class Metainfo extends Helper
         if ($row['title']) {
             $this->get('template')->setTitle($row['title']);
             $this->get('template')->setMetaData('og:title', $row['title'], 'property');
+            $this->get('template')->setMetaData('twitter:title', $row['title'], 'property');
+            Configure::write('app.title', $row['title']);
         }
 
         if ($row['keywords']) {
@@ -69,6 +71,7 @@ class Metainfo extends Helper
         if ($row['descn']) {
             $this->get('template')->setDescription($row['descn']);
             $this->get('template')->setMetaData('og:description', $row['descn'], 'property');
+            $this->get('template')->setMetaData('twitter:description', $row['descn'], 'property');
         }
 
         if ($row['canonical']) {
