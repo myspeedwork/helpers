@@ -63,7 +63,7 @@ class Access extends Helper
         return $return;
     }
 
-    public function isAllowed($permission, &$permissions = [])
+    public function isAllowed($permission, $permissions = [])
     {
         $permission = strtolower(trim($permission));
 

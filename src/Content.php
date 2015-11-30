@@ -21,7 +21,7 @@ class Content extends Helper
 {
     public $enable = true;
 
-    public function index(&$content, $break = false)
+    public function index($content, $break = false)
     {
         if (!$this->enable) {
             return $content;

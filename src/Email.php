@@ -19,38 +19,13 @@ use Speedwork\Core\Helper;
  */
 class Email extends Helper
 {
-    public function send($tags = [], $to_email, $subject, $template, $html = '', $from_email = '', $from_name = '', $attachments = [])
+    public function send($data = [])
     {
-        $att = [];
-        if (is_array($attachments)) {
-            foreach ($attachments as $attach) {
-                $name  = @basename($attach);
-                $att[] = [
-                        'name'    => $name,
-                        'content' => $attach,
-                    ];
-            }
-        }
-
-        $data                = [];
-        $data['subject']     = $subject;
-        $data['html']        = $html;
-        $data['tags']        = $tags;
-        $data['to']          = $to_email;
-        $data['template']    = $template;
-        $data['from_name']   = $from_name;
-        $data['from_email']  = $from_email;
-        $data['attachments'] = $att;
-        $data['headers']     = [];
-        $data['theme']       = '';
-
         return $this->sendEmail($data);
     }
 
     public function sendEmail($data = [])
     {
-        $enable = Configure::read('mail.enable');
-
         $sent  = false;
         $merge = [];
 
@@ -58,7 +33,11 @@ class Email extends Helper
         $name         = str_replace(['.tpl','.html','.txt'], '', $name);
         $data['name'] = $name;
 
-        $config = Configure::read('mail');
+        if (!is_array($data['config'])) {
+            $config = Configure::read('mail');
+        } else {
+            $config = $data['config'];
+        }
 
         //over write mail from per perticular template if avalable
         $email_from = $config['email_from'];
@@ -114,7 +93,7 @@ class Email extends Helper
         $data['attachments'] = $this->formatAttachments($data['attachments']);
 
         //if disable
-        if (!$enable) {
+        if (!$config['enable']) {
             $data['reason'] = 'Mail sending disabled';
             $this->logMail($data, false);
 
@@ -130,8 +109,9 @@ class Email extends Helper
 
         $provider = ($config['provider']) ? $config['provider'] : 'PHPMailer';
 
-        $mail = $this->get('resolver')->helper($provider);
-        $sent = $mail->send($data, $config[strtolower($provider)]);
+        $mail     = $this->get('resolver')->helper($provider);
+        $provider = strtolower($provider);
+        $sent     = $mail->send($data, $config[$provider]);
 
         $status = $sent['status'];
 
@@ -193,8 +173,7 @@ class Email extends Helper
         $list = [];
         // Remove Duplicates
         foreach ($ids as $value) {
-            $key        = md5($value['email']);
-            $list[$key] = $value;
+            $list[$value['email']] = $value;
         }
 
         unset($id, $ids);
@@ -222,7 +201,7 @@ class Email extends Helper
 
         $blacklist = [];
         foreach ($rows as $row) {
-            $blacklist[md5($row['email'])] = $row['email'];
+            $blacklist[$row['email']] = 1;
         }
 
         foreach ($emails as $key => $email) {
@@ -246,7 +225,7 @@ class Email extends Helper
                 $att[] = $attach;
             } else {
                 $att[] = [
-                    'name'    => @basename($attach),
+                    'name'    => basename($attach),
                     'content' => $attach,
                 ];
             }
@@ -296,7 +275,7 @@ class Email extends Helper
         return $return;
     }
 
-    public function replace(&$vars, &$html)
+    public function replace($vars = [], $html = null)
     {
         if (preg_match_all('~\{\$([^{}]+)\}~', $html, $matches) && count($matches[0]) > 0) {
             foreach ($matches[0] as $key => $match) {
@@ -317,7 +296,7 @@ class Email extends Helper
         return $vars;
     }
 
-    public function logMail(&$data, $status = true)
+    public function logMail($data = [], $status = true)
     {
         //log enable
         if (!Configure::read('mail.log') || $data['log'] === false) {

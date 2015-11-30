@@ -347,7 +347,7 @@ class Transfer extends Helper
         }
     }
 
-    private function listContents(&$manager, $adapter = null, $id = null, $list = null, $ids = null, &$meta = [])
+    private function listContents($manager, $adapter = null, $id = null, $list = null, $ids = null, $meta = [])
     {
         if ($list == 'database') {
             $conditions   = [];
@@ -399,7 +399,7 @@ class Transfer extends Helper
      *
      * @return [type] [description]
      */
-    private function getManager($adapter, $config = [], &$meta = [], $type = null)
+    private function getManager($adapter, $config = [], $meta = [], $type = null)
     {
         $config['root'] = isset($config['root']) ? $config['root'] : '/';
 
@@ -510,7 +510,7 @@ class Transfer extends Helper
         return false;
     }
 
-    private function nameFormat($file, &$meta = [])
+    private function nameFormat($file, $meta = [])
     {
         $format = $meta['format'];
 

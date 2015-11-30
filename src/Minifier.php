@@ -53,7 +53,7 @@ class Minifier
         $urls = [];
         foreach ($list as $ext => $files) {
             // Send Etag hash
-            $hash = md5(@implode(',', $files));
+            $hash = md5(implode(',', $files));
            // Try the cache first to see if the minifyd files were already generated
             $cachefile = 'cache-'.$hash.$ext;
             $cacheurl  = _STATIC.$cachefile;
@@ -64,11 +64,11 @@ class Minifier
                 foreach ($files as $file) {
                     //if files are css then compress and replace urls
                     if ($ext == '.css') {
-                        $cachec = @file_get_contents($file);
+                        $cachec = file_get_contents($file);
                         $content .= $this->absolute($cachec, $file);
                         //$content .= $this->compress($cachec);
                     } else {
-                        $content .= @file_get_contents($file);
+                        $content .= file_get_contents($file);
                     }
                     $content .= ';';
                 }

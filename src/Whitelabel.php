@@ -12,9 +12,10 @@
 namespace Speedwork\Helpers;
 
 use Speedwork\Config\Configure;
+use Speedwork\Core\Helper as BaseHelper;
 use Speedwork\Core\Registry;
 
-class Whitelabel
+class Whitelabel extends BaseHelper
 {
     public $enable = true;
 
@@ -24,8 +25,7 @@ class Whitelabel
             return true;
         }
 
-        $database = Registry::get('database');
-        $domain   = strtolower(ltrim($_SERVER['HTTP_HOST'], 'www.'));
+        $domain = strtolower(ltrim($_SERVER['HTTP_HOST'], 'www.'));
 
         if ($this->isCli()) {
             $domain = Configure::read('cli_domain');
@@ -35,12 +35,12 @@ class Whitelabel
             return false;
         }
 
-        $row = $database->find('#__whitelist_domains', 'first', [
+        $row = $this->database->find('#__whitelist_domains', 'first', [
             'conditions' => ['domain' => $domain,'status' => 1],
             ]
         );
 
-        //$database->showQuery(true);
+        //$this->database->showQuery(true);
 
         if (!$this->isCli() && empty($row['fkuserid'])) {
             self::_deleted();
@@ -64,12 +64,11 @@ class Whitelabel
         $paths   = [];
         $paths[] = APP.'public'.DS.'templates'.DS.'system'.DS.'deleted.tpl';
         $paths[] = SYS.'templates'.DS.'system'.DS.'deleted.tpl';
-        //$template = Registry::get('template');
 
         foreach ($paths as $path) {
             if (file_exists($path)) {
-                $content = @file_get_contents($path);
-                echo $this->_parseContent($content);
+                $content = file_get_contents($path);
+                echo $this->parseContent($content);
                 break;
             }
         }
@@ -81,12 +80,8 @@ class Whitelabel
         return (php_sapi_name() === 'cli');
     }
 
-    private function _parseContent($content)
+    private function parseContent($content)
     {
-        $vars = [
-
-        ];
-
         return $content;
     }
 }

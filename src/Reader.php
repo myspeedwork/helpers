@@ -31,13 +31,13 @@ use Traversable;
  */
 class Reader extends Helper
 {
-    public function fetchAll($filePath, callable $callable = null, $options = [])
+    public function fetchAll($reader, callable $callable = null, $options = [])
     {
-        $ext = (!empty($options['ext'])) ? $options['ext'] : strtolower(strrchr($filePath, '.'));
+        $ext = (!empty($options['ext'])) ? $options['ext'] : strtolower(strrchr($reader, '.'));
         $ext = strtolower($ext);
 
         if (!in_array($ext, ['.array', '.iterator']) &&
-            (!is_file($filePath) || !file_exists($filePath))) {
+            (!is_file($reader) || !file_exists($reader))) {
             return new EmptyIterator();
         }
 
@@ -45,10 +45,10 @@ class Reader extends Helper
         $duplicates = CsvReader::DUPLICATE_HEADERS_INCREMENT;
 
         if (!in_array($ext, ['.array','.iterator'])) {
-            $file = new SplFileObject($filePath);
+            $file = new SplFileObject($reader);
             //Auto detect delimiter
             if (empty($options['delimiter'])) {
-                $options['delimiter'] = $this->detectDelimiter($filePath, $lines);
+                $options['delimiter'] = $this->detectDelimiter($reader, $lines);
             }
         }
 
@@ -75,15 +75,15 @@ class Reader extends Helper
                 break;
 
             case '.array':
-                if (!is_array($filePath)) {
-                    $filePath = explode("\n", $filePath);
+                if (!is_array($reader)) {
+                    $reader = explode("\n", $reader);
                 }
 
-                $reader = new ArrayReader($filePath);
+                $reader = new ArrayReader($reader);
                 break;
 
             case '.iterator':
-                $reader = &$filePath;
+            default:
                 break;
         }
 

@@ -41,6 +41,20 @@ class Pdf extends Helper
         $this->pdf = new HTML2PDF($orientation, $size, 'en');
         $this->pdf->setDefaultFont('Arial');
         $this->content = null;
+
+        return $this->pdf;
+    }
+
+    public function setContent($data = null)
+    {
+        $this->content .= $data;
+
+        return $this;
+    }
+
+    public function getPdf()
+    {
+        return $this->pdf;
     }
 
     /**
@@ -50,13 +64,12 @@ class Pdf extends Helper
      */
     public function append($content = '')
     {
-        $this->content .= $content;
-        unset($content); // we don't need further
+        return $this->setContent($content);
     }
 
     public function writeHTML($content = '')
     {
-        $this->append($content);
+        return $this->setContent($content);
     }
 
     /**
@@ -72,10 +85,11 @@ class Pdf extends Helper
         $this->getContent($data);
 
         $this->pdf->writeHTML($this->content);
-        $this->pdf->Output($name, $output);
+        $this->pdf->output($name, $output);
 
         $this->content = null;
     }
+
     /**
      * Public function to get the content and replace them.
      *
@@ -85,11 +99,16 @@ class Pdf extends Helper
      */
     public function getContent($data)
     {
-        $array_content             = [];
-        $array_content['sitename'] = _SITENAME;
-        $array_content['siteurl']  = _URL;
-        $array_content['imageurl'] = _IMG_URL.'pdf_templates/';
-        $tags                      = array_merge($data['tags'], $array_content);
+        if (empty($data['template'])) {
+            return false;
+        }
+
+        $tags             = [];
+        $tags['sitename'] = _SITENAME;
+        $tags['siteurl']  = _URL;
+        $tags['imageurl'] = _IMG_URL.'pdf_templates/';
+
+        $tags = array_merge($data['tags'], $tags);
 
         $filename = $data['template'];
 
@@ -107,8 +126,7 @@ class Pdf extends Helper
                 $emailTemplate = $this->get('engine')->create($template, $tags)->render();
             }
 
-            $filename = str_replace('.html', '.tpl', $filename);
-            $html     = $this->get('engine')->create($filename, $tags)->render();
+            $html = $this->get('engine')->create($filename, $tags)->render();
 
             //put the content into template
             $this->content = str_replace('<!--PDFBODY-->', $html, $emailTemplate);
@@ -117,6 +135,6 @@ class Pdf extends Helper
 
     public function __call($function, $args)
     {
-        call_user_func_array([$this->pdf->pdf,$function], $args);
+        call_user_func_array([$this->pdf->pdf, $function], $args);
     }
 }

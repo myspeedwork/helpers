@@ -137,7 +137,7 @@ class Sms extends Helper
         return $message;
     }
 
-    public function replace(&$vars, &$message)
+    public function replace($vars = [], $message = [])
     {
         if (preg_match_all('~\{\$([^{}]+)\}~', $message, $matches) && count($matches[0]) > 0) {
             foreach ($matches[0] as $key => $match) {
@@ -158,7 +158,7 @@ class Sms extends Helper
         return $vars;
     }
 
-    public function logSms(&$data, $status = true)
+    public function logSms($data = [], $status = true)
     {
         //log enable
         if (!Configure::read('sms.log') || $data['log'] === false) {

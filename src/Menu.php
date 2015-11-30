@@ -336,7 +336,7 @@ class Menu extends Helper
             $menuName[] = $data['name'];
         }
 
-        return @implode($implode, $menuName);
+        return implode($implode, $menuName);
     }
 
     public function menuIDToNames($id)
@@ -385,7 +385,7 @@ class Menu extends Helper
         return $categoriesurl;
     }
 
-    public function renderCategoires(&$menuData = [], $parent = 0)
+    public function renderCategoires($menuData = [], $parent = 0)
     {
         $categories = [];
 
@@ -429,7 +429,7 @@ class Menu extends Helper
             $m[] = self::menuIDToParents($pid);
         }
 
-        return @implode($implode, array_reverse($m));
+        return implode($implode, array_reverse($m));
     }
 
     public function getParentLinks($id)

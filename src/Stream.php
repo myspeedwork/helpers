@@ -69,7 +69,7 @@ class Stream
         }
     }
 
-    public function header(&$fields = [], $seperator = '')
+    public function header($fields = [], $seperator = '')
     {
         if (is_array($fields)) {
             $out = [];
@@ -83,18 +83,18 @@ class Stream
             }
 
             $seperator = ($seperator) ?: $this->seperator;
-            echo @implode($seperator, $out).$this->lineEnd;
+            echo implode($seperator, $out).$this->lineEnd;
         }
     }
 
-    public function excel(&$fields = [], &$data = [], $seperator = '')
+    public function excel($fields = [], $data = [], $seperator = '')
     {
         $seperator = ($seperator) ?: $this->seperator;
         $this->header($fields, $seperator);
         $this->flushRows($data, $seperator);
     }
 
-    public function output(&$data = [], $fields = [], $keys = false, $seperator = '')
+    public function output($data = [], $fields = [], $keys = false, $seperator = '')
     {
         $seperator = ($seperator) ?: $this->seperator;
 
@@ -109,7 +109,7 @@ class Stream
             }
         }
 
-        echo @implode($seperator, $fields).$this->lineEnd;
+        echo implode($seperator, $fields).$this->lineEnd;
 
         foreach ($data as $row) {
             $out = [];
@@ -117,14 +117,14 @@ class Stream
                 $out[] = $this->clean($row[$k]);
             }
 
-            echo @implode($seperator, $out).$this->lineEnd;
+            echo implode($seperator, $out).$this->lineEnd;
             flush();
             ob_flush();
         }
         unset($data, $fields, $out);
     }
 
-    public function flush(&$row = [], &$fields = [], $seperator = '')
+    public function flush($row = [], $fields = [], $seperator = '')
     {
         $seperator = ($seperator) ?: $this->seperator;
 
@@ -133,24 +133,24 @@ class Stream
             $out[] = $this->clean($row[$k]);
         }
 
-        echo @implode($seperator, $out).$this->lineEnd;
+        echo implode($seperator, $out).$this->lineEnd;
         flush();
         ob_flush();
 
         unset($out);
     }
 
-    public function flushRows(&$rows = [], $seperator = '')
+    public function flushRows($rows = [], $seperator = '')
     {
         $seperator = ($seperator) ?: $this->seperator;
         foreach ($rows as $row) {
-            echo @implode($seperator, $row).$this->lineEnd;
+            echo implode($seperator, $row).$this->lineEnd;
             flush();
             ob_flush();
         }
     }
 
-    public function clean(&$string)
+    public function clean($string)
     {
         return str_replace(["\n","\t","\r"], '', $string);
     }

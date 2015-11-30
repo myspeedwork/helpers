@@ -30,7 +30,9 @@ class Instance
         file_put_contents($pid, getmypid());
         # remove the lock on exit (Control+C doesn't count as 'exit'?)
         register_shutdown_function(function () use ($pid) {
-            @unlink($pid);
+            if (file_exists($pid)) {
+                unlink($pid);
+            }
         });
 
         return false;
@@ -39,7 +41,9 @@ class Instance
     public function done($name)
     {
         $pid = TMP.$name.'.pid';
-        @unlink($pid);
+        if (file_exists($pid)) {
+            unlink($pid);
+        }
     }
 
     public function pidExits($pid, $name)

@@ -117,7 +117,7 @@ class Engine extends Helper
      * Template engine parse link
      * $allowed vars : link
      */
-    public function link(&$params)
+    public function link($params = [])
     {
         return Baserouter::link($params['link']);
     }
@@ -128,7 +128,7 @@ class Engine extends Helper
      * {assign var="left_count" value="{speed countModules="right"}"}
      * {/code}
      */
-    public function countModules(&$params)
+    public function countModules($params = [])
     {
         $position = $params['countModules'];
 
@@ -137,7 +137,7 @@ class Engine extends Helper
     /*
      * get the configuration options
     */
-    public function config(&$params)
+    public function config($params = [])
     {
         return Configure::read($params['config']);
     }
@@ -149,7 +149,7 @@ class Engine extends Helper
      * {speed template="setMetaData" params="viewport','320"}
      * {/code}
      */
-    public function template(&$params)
+    public function template($params = [])
     {
         $function = $params['template'];
         $template = $this->get('template');
@@ -164,7 +164,7 @@ class Engine extends Helper
      * {speed layout="layout_list" name="books"}
      * {/code}
      */
-    public function layout(&$params)
+    public function layout($params = [])
     {
         $layout = $params['layout'];
         $type   = $params['type'];
@@ -182,7 +182,7 @@ class Engine extends Helper
      * {speed t="my name is %s. email is %s" r="sankar','sankar.suda@gmail.com"}
      * {/code}
      */
-    public function trans(&$params)
+    public function trans($params = [])
     {
         $t = $params['t'];
         unset($params['t']);
@@ -197,7 +197,7 @@ class Engine extends Helper
      * {speed request=module|component}
      * {/code}
      */
-    public function request(&$params)
+    public function request($params = [])
     {
         $type = $params['type'];
         $app  = $this->get('resolver');
@@ -217,7 +217,7 @@ class Engine extends Helper
         }
     }
 
-    public function render(&$params = [])
+    public function render($params = [])
     {
         return $this->get('template')->getBuffer($params['render'], $params['name'], $params);
     }

@@ -347,7 +347,7 @@ class Router extends Helper
         }
     }
 
-    public function iskeyexists(&$save)
+    public function iskeyexists($save = [])
     {
         $data = $this->database->find('#__addon_shorturls', 'first', [
             'conditions' => ['short_url' => $save['shorturl']],
@@ -365,7 +365,7 @@ class Router extends Helper
         return true;
     }
 
-    public function checkShortUrl(&$save)
+    public function checkShortUrl($save = [])
     {
         if (self::iskeyexists($save)) {
             $shorturl          = $save['short_url'];
