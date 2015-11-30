@@ -11,7 +11,6 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 use Speedwork\Util\Router as BaseRouter;
 use Speedwork\Util\Utility;
@@ -64,7 +63,7 @@ class Router extends Helper
             }
         }
 
-        $config        = Configure::read('seo');
+        $config        = $this->read('seo');
         $this->_short  = $config['short']['enable'];
         $this->_router = $config['router']['enable'];
         $this->_seo    = $config['seo']['enable'];
@@ -96,7 +95,7 @@ class Router extends Helper
             //$this->routes['(:any)'] = 'index.php?option=shop&view=$1';
         }
 
-        $siteid  = Configure::read('siteid');
+        $siteid  = $this->read('siteid');
         $forward = $config['forward'];
 
         if ($forward['enable']
@@ -300,7 +299,7 @@ class Router extends Helper
 
         if (empty($save['uniqid'])) {
             //get config
-            $conf   = Configure::read('short_url_config');
+            $conf   = $this->read('short_url_config');
             $k      = $save['component'].':'.$save['view'];
             $key    = $conf[$k];
             $uniqid = $key['uniqid'];

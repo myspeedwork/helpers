@@ -11,7 +11,6 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 use Speedwork\Util\Router as BaseRouter;
 
@@ -139,7 +138,7 @@ class Engine extends Helper
     */
     public function config($params = [])
     {
-        return Configure::read($params['config']);
+        return $this->read($params['config']);
     }
 
     /*

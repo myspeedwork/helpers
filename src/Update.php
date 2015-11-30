@@ -11,7 +11,6 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper as BaseHelper;
 use Speedwork\Util\Utility;
 
@@ -29,7 +28,7 @@ class Update extends BaseHelper
 
     public function beforeRun()
     {
-        $tables = Configure::read('event_tables');
+        $tables = $this->read('event_tables');
 
         $this->tables   = array_merge($tables['default'], $tables['update']);
         $this->agents[] = ['users', 'user_contact_details', 'user_permissions'];

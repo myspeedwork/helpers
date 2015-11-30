@@ -14,7 +14,6 @@
 namespace Speedwork\Helpers;
 
 use HTML2PDF;
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 
 /**
@@ -117,7 +116,7 @@ class Pdf extends Helper
         $filename = str_replace('.html', '.tpl', $filename);
         $filename = $path.$filename;
 
-        $theme    = Configure::read('pdf.theme');
+        $theme    = $this->read('pdf.theme');
         $theme    = ($theme) ? $theme : 'theme.tpl';
         $template = $path.$theme;
 

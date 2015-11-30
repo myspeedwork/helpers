@@ -11,7 +11,6 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper as BaseHelper;
 
 /**
@@ -26,7 +25,7 @@ class Delete extends BaseHelper
 
     public function beforeRun()
     {
-        $tables = Configure::read('event_tables');
+        $tables = $this->read('event_tables');
 
         $this->tables   = array_merge($tables['default'], $tables['delete']);
         $this->agents[] = ['users'];

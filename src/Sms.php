@@ -11,7 +11,6 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 
 /**
@@ -21,7 +20,7 @@ class Sms extends Helper
 {
     public function sendSms($data = [])
     {
-        $config = Configure::read('sms');
+        $config = $this->read('sms');
 
         $tags = (is_array($data['tags'])) ? $data['tags'] : [];
 
@@ -161,7 +160,7 @@ class Sms extends Helper
     public function logSms($data = [], $status = true)
     {
         //log enable
-        if (!Configure::read('sms.log') || $data['log'] === false) {
+        if (!$this->read('sms.log') || $data['log'] === false) {
             return true;
         }
 

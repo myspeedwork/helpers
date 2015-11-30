@@ -16,7 +16,6 @@ use Exception;
 //use Hybridauth\Hybridauth;
 use Hybrid_Auth as Hybridauth;
 use Hybrid_Endpoint as Endpoint;
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 
 /**
@@ -36,7 +35,7 @@ class Social extends Helper
     public function beforeRun()
     {
         //get social configuration
-        $social = Configure::read('members.social');
+        $social = $this->read('members.social');
         if ($social['enable'] == true) {
             $this->config = $social;
 

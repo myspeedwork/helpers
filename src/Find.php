@@ -12,7 +12,6 @@
 namespace Speedwork\Helpers;
 
 use League\CommonMark\CommonMarkConverter;
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 
 /**
@@ -31,7 +30,7 @@ class Find extends Helper
 
     public function beforeRun()
     {
-        $tables = Configure::read('event_tables');
+        $tables = $this->read('event_tables');
 
         $this->tables   = array_merge($tables['default'], $tables['find']);
         $this->agents[] = ['users', 'user_contact_details', 'user_permissions'];

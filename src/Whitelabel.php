@@ -11,9 +11,7 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper as BaseHelper;
-use Speedwork\Core\Registry;
 
 class Whitelabel extends BaseHelper
 {
@@ -28,7 +26,7 @@ class Whitelabel extends BaseHelper
         $domain = strtolower(ltrim($_SERVER['HTTP_HOST'], 'www.'));
 
         if ($this->isCli()) {
-            $domain = Configure::read('cli_domain');
+            $domain = $this->read('cli_domain');
         }
 
         if (empty($domain)) {
@@ -40,26 +38,25 @@ class Whitelabel extends BaseHelper
             ]
         );
 
-        //$this->database->showQuery(true);
-
         if (!$this->isCli() && empty($row['fkuserid'])) {
-            self::_deleted();
+            $this->isDeleted();
         }
 
         $siteid   = ($row['configid']) ? $row['configid'] : $row['id'];
         $configid = ($row['configid']) ? [$row['configid'],$row['id']] : [$row['id']];
 
-        Registry::set('domain_owner', $row['fkuserid']);
-        Registry::set('configid', $configid);
-        Registry::set('siteid', $siteid);
-        Configure::write('siteid', $siteid);
+        $this->set('domain_owner', $row['fkuserid']);
+        $this->set('configid', $configid);
+        $this->set('siteid', $siteid);
+
+        $this->write('siteid', $siteid);
 
         if (!$this->isCli() && $row['fkuserid'] && $row['status'] != 1) {
-            self::_deleted();
+            $this->isDeleted();
         }
     }
 
-    private function _deleted()
+    private function isDeleted()
     {
         $paths   = [];
         $paths[] = APP.'public'.DS.'templates'.DS.'system'.DS.'deleted.tpl';

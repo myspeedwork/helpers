@@ -22,7 +22,7 @@ class Metainfo extends Helper
 {
     public function index()
     {
-        $config = Configure::read('metainfo');
+        $config = $this->read('metainfo');
 
         if (!is_array($config)) {
             return false;
@@ -102,7 +102,7 @@ class Metainfo extends Helper
 
         if (empty($save['uniqueid'])) {
             //get config
-            $conf   = Configure::read('metainfo_url_config');
+            $conf   = $this->read('metainfo_url_config');
             $k      = $save['option'].':'.$save['view'];
             $key    = $conf[$k];
             $uniqid = $key['uniqid'];

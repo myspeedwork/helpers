@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
+
 namespace Speedwork\Helpers;
 
-use Sabre\DAV;
 use Speedwork\Core\Helper;
 
 /**
@@ -48,17 +48,17 @@ class Dav extends Helper
         $password = $result[1];
 
         // Note: skip authentication if already logged in  and have access
-        if (!$this->is_user_logged_in) {
+        if (!$this->get('is_user_logged_in')) {
             // Try to authenticate
-            $login = $this->acl->LogUserIn($username, $password);
+            $login = $this->get('acl')->LogUserIn($username, $password);
 
             if ($login !== true) {
                 return false;
             }
         }
 
-        if (!$this->is_user_logged_in) {
-            if (!$this->acl->isAllowed('webdev:**')) {
+        if (!$this->get('is_user_logged_in')) {
+            if (!$this->get('acl')->isAllowed('webdev:**')) {
                 return false;
             }
         }

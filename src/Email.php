@@ -11,7 +11,6 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 
 /**
@@ -34,7 +33,7 @@ class Email extends Helper
         $data['name'] = $name;
 
         if (!is_array($data['config'])) {
-            $config = Configure::read('mail');
+            $config = $this->read('mail');
         } else {
             $config = $data['config'];
         }
@@ -178,7 +177,7 @@ class Email extends Helper
 
         unset($id, $ids);
 
-        $config = Configure::read('mail');
+        $config = $this->read('mail');
 
         if ($config['blacklist'] && $blacklist) {
             $list = $this->checkBlackList($list);
@@ -238,7 +237,7 @@ class Email extends Helper
     {
         $return = [];
         // insert template
-        $email_replace = Configure::read('email.replace');
+        $email_replace = $this->read('email.replace');
         $array_content = (is_array($email_replace)) ? $email_replace : [];
 
         $array_content['sitename']    = _SITENAME;
@@ -252,7 +251,7 @@ class Email extends Helper
         $filename = str_replace('.html', '.tpl', $filename);
         $filename = $path.$filename;
 
-        $theme    = Configure::read('email.theme');
+        $theme    = $this->read('email.theme');
         $theme    = ($theme) ? $theme : 'emailer.tpl';
         $template = $path.$theme;
 
@@ -299,7 +298,7 @@ class Email extends Helper
     public function logMail($data = [], $status = true)
     {
         //log enable
-        if (!Configure::read('mail.log') || $data['log'] === false) {
+        if (!$this->read('mail.log') || $data['log'] === false) {
             return true;
         }
 
@@ -326,7 +325,7 @@ class Email extends Helper
 
     private function cleanUrl($url)
     {
-        $is_ssl = Configure::read('is_ssl');
+        $is_ssl = $this->read('is_ssl');
         $prefix = ($is_ssl) ? 'https://' : 'http://';
 
         $short = substr($url, 0, 2);
