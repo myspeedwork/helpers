@@ -12,10 +12,8 @@
 namespace Speedwork\Helpers;
 
 use Exception;
-//use Hybridauth\Endpoint;
-//use Hybridauth\Hybridauth;
-use Hybrid_Auth as Hybridauth;
-use Hybrid_Endpoint as Endpoint;
+use Hybridauth\Endpoint;
+use Hybridauth\Hybridauth;
 use Speedwork\Core\Helper;
 
 /**

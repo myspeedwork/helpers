@@ -66,12 +66,13 @@ class Minifier
                     if ($ext == '.css') {
                         $cachec = file_get_contents($file);
                         $content .= $this->absolute($cachec, $file);
-                        //$content .= $this->compress($cachec);
                     } else {
                         $content .= file_get_contents($file);
                     }
                     $content .= ';';
                 }
+
+                //$content = $this->compress($content);
 
                 $fp = fopen($dir, 'wb');
                 fwrite($fp, $content);
@@ -86,10 +87,20 @@ class Minifier
 
     public function compress($text)
     {
-        /* remove comments */
-        $text = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $text);
+        $patterns   = [];
+        $patterns[] = '/(?:(?:\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/)|(?:(?<!\:|\\\|\'|\)|\")\/\/.*))/';
+        $patterns[] = "/\/\*#([\s]*)sourceMappingURL\=([\w\.]+)([\s]*)\*\//";
+        $patterns[] = "/\/\/#([\s]*)sourceMappingURL\=([^\s;]+)/";
+        $patterns[] = '!/\*[^*]*\*+([^/][^*]*\*+)*/!'; //remove comments
+
+        foreach ($patterns as $pattern) {
+            $text = preg_replace($pattern, '', $text);
+        }
+
         /* remove tabs, spaces, newlines, etc. */
         $text = str_replace(["\r\n", "\r", "\n", "\t", '  ', '    ', '    '], '', $text);
+        //remove all spaces
+        $text = preg_replace('/\s+/', ' ', $text);
 
         return $text;
     }
