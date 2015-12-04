@@ -128,9 +128,9 @@ class Social extends Helper
 
     protected function getProfile($name)
     {
-        $result = $this->profile->$name;
+        $result = $this->profile[$name];
         if ($name == 'email' && empty($result)) {
-            $result = $this->profile->displayName.'@twitter.com';
+            $result = $this->profile['displayName'].'@twitter.com';
         }
 
         return $result;
@@ -174,7 +174,7 @@ class Social extends Helper
         $save['identifier']   = $this->getProfile('identifier');
         $save['email']        = $this->getProfile('email');
         $save['display_name'] = $this->getProfile('displayName');
-        $save['session_info'] = $this->instance->getSessionData();
+        $save['session_info'] = $this->instance->getStorageData();
         $save['profile']      = json_encode($this->profile);
         $save['created']      = time();
         $save['status']       = 1;
@@ -269,7 +269,7 @@ class Social extends Helper
 
     public function updateSession($id)
     {
-        $session_info = $this->instance->getSessionData();
+        $session_info = $this->instance->getStorageData();
         if ($session_info) {
             $this->database->update('#__user_social', ['session_info' => $session_info, 'modified' => time()], ['id' => $id]);
         }
