@@ -22,38 +22,25 @@ use Speedwork\Util\Utility;
 class Update extends BaseHelper
 {
     protected $tables = [];
-    protected $agents = [];
-    protected $userid;
-    protected $agent_id;
 
     public function beforeRun()
     {
         $tables = $this->read('event_tables');
 
-        $this->tables   = array_merge($tables['default'], $tables['update']);
-        $this->agents[] = ['users', 'user_contact_details', 'user_permissions'];
-
-        $this->userid   = $this->get('userid');
-        $this->agent_id = $this->get('agent_id');
+        $this->tables = array_merge($tables['default'], $tables['update']);
     }
 
     public function beforeUpdate(&$query = [], $details = [])
     {
-        $this->userid   = $this->get('userid');
-        $this->agent_id = $this->get('agent_id');
+        $userid = $this->get('userid');
 
         //$query['fields'] = Utility::stripTags($query['fields']);
 
-        if ($details['ignore'] === true || empty($this->userid)) {
+        if ($details['ignore'] === true || empty($userid)) {
             return true;
         }
 
-        $table = str_replace('#__', '', $query['table']);
-
-        if ($this->agent_id && in_array($table, $this->agents)) {
-            $query = $this->changeConditions($query);
-        }
-
+        $table  = str_replace('#__', '', $query['table']);
         $column = $this->tables[$table];
 
         if (!isset($column)) {
@@ -62,29 +49,8 @@ class Update extends BaseHelper
 
         $alias = ($query['alias']) ? $query['alias'].'.' : '';
 
-        $query['conditions'][] = [$alias.$column => $this->userid];
+        $query['conditions'][] = [$alias.$column => $userid];
 
         return true;
-    }
-
-    /**
-     * [changeConditions description].
-     *
-     * @param [type] $query    [description]
-     * @param [type] $agent_id [description]
-     *
-     * @return [type] [description]
-     */
-    private function changeConditions(&$query)
-    {
-        $conditions = $query['conditions'];
-
-        foreach ($conditions as $key => &$value) {
-            $value = str_replace($this->userid, $this->agent_id, $value);
-        }
-
-        $query['conditions'] = $conditions;
-
-        return $query;
     }
 }

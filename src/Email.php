@@ -47,6 +47,16 @@ class Email extends Helper
             }
         }
 
+        if (is_array($config['from'])) {
+            $config['from_name']  = $config['from']['name'];
+            $config['from_email'] = $config['from']['email'];
+        }
+
+        if (is_array($data['from'])) {
+            $data['from_name']  = $data['from']['name'];
+            $data['from_email'] = $data['from']['email'];
+        }
+
         $data['from_name']  = (empty($data['from_name'])) ? $config['from_name'] : $data['from_name'];
         $data['from_email'] = (empty($data['from_email'])) ? $config['from_email'] : $data['from_email'];
 

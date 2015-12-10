@@ -99,20 +99,6 @@ class Engine extends Helper
     }
 
     /*
-     &* check is valid function to execute
-    */
-    public function execute($method, $params)
-    {
-        if (in_array($method, $this->allowed)) {
-            if ($method == 't') {
-                $method = 'trans';
-            }
-
-            return $this->$method($params);
-        }
-    }
-
-    /*
      * Template engine parse link
      * $allowed vars : link
      */
@@ -132,13 +118,6 @@ class Engine extends Helper
         $position = $params['countModules'];
 
         return $this->get('resolver')->countModules($position);
-    }
-    /*
-     * get the configuration options
-    */
-    public function config($params = [])
-    {
-        return $this->read($params['config']);
     }
 
     /*

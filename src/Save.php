@@ -22,19 +22,12 @@ use Speedwork\Util\Utility;
 class Save extends BaseHelper
 {
     protected $tables = [];
-    protected $agents = [];
-    protected $userid;
-    protected $agent_id;
 
     public function beforeRun()
     {
         $tables = $this->read('event_tables');
 
-        $this->tables   = array_merge($tables['default'], $tables['save']);
-        $this->agents[] = ['users', 'user_contact_details', 'user_permissions'];
-
-        $this->userid   = $this->get('userid');
-        $this->agent_id = $this->get('agent_id');
+        $this->tables = array_merge($tables['default'], $tables['save']);
     }
 
     public function beforeSave(&$data, $table, &$details = [])
@@ -43,15 +36,10 @@ class Save extends BaseHelper
 
         //$data = Utility::stripTags($data);
 
-        $this->userid   = $this->get('userid');
-        $this->agent_id = $this->get('agent_id');
+        $userid = $this->get('userid');
 
-        if ($details['ignore'] === true || empty($this->userid)) {
+        if ($details['ignore'] === true || empty($userid)) {
             return true;
-        }
-
-        if ($this->agent_id && in_array($table, $this->agents)) {
-            $data = $this->changeConditions($data);
         }
 
         $column = $this->tables[$table];
@@ -64,40 +52,15 @@ class Save extends BaseHelper
         if (is_array($data[0])) {
             foreach ($data as &$value) {
                 if (!isset($value[$column])) {
-                    $value[$column] = $this->userid;
+                    $value[$column] = $userid;
                 }
             }
         } else {
             if (!isset($data[$column])) {
-                $data[$column] = $this->userid;
+                $data[$column] = $userid;
             }
         }
 
         return true;
-    }
-
-    /**
-     * [changeConditions description].
-     *
-     * @param [type] $data     [description]
-     * @param [type] $agent_id [description]
-     *
-     * @return [type] [description]
-     */
-    private function changeConditions($data)
-    {
-        if (is_array($data[0])) {
-            foreach ($data as &$value) {
-                foreach ($value as $k => &$v) {
-                    $v = str_replace($this->userid, $this->agent_id, $v);
-                }
-            }
-        } else {
-            foreach ($data as &$value) {
-                $value = str_replace($this->userid, $this->agent_id, $value);
-            }
-        }
-
-        return $data;
     }
 }

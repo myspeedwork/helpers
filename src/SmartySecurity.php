@@ -26,7 +26,7 @@ class SmartySecurity extends Smarty_Security
      // allow everthing as modifier
     public $modifiers = [];
 
-    public function isTrustedResourceDir($filepath)
+    public function isTrustedResourceDir($filepath, $isConfig = null)
     {
         return true;
     }

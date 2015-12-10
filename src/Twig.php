@@ -45,4 +45,18 @@ class Twig extends Engine
     {
         return Baserouter::link($url);
     }
+
+    /*
+     &* check is valid function to execute
+    */
+    public function execute($method, $params)
+    {
+        if (in_array($method, $this->allowed)) {
+            if ($method == 't') {
+                $method = 'trans';
+            }
+
+            return $this->$method($params);
+        }
+    }
 }
