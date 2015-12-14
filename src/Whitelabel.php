@@ -15,18 +15,16 @@ use Speedwork\Core\Helper as BaseHelper;
 
 class Whitelabel extends BaseHelper
 {
-    public $enable = true;
-
     public function run()
     {
-        if (!$this->enable) {
-            return true;
+        if (!config('app.whitelabel')) {
+            return false;
         }
 
-        $domain = strtolower(ltrim($_SERVER['HTTP_HOST'], 'www.'));
+        $domain = strtolower(ltrim(env('HTTP_HOST'), 'www.'));
 
         if ($this->isCli()) {
-            $domain = $this->read('cli_domain');
+            $domain = config('app.cli_domain');
         }
 
         if (empty($domain)) {
@@ -34,24 +32,23 @@ class Whitelabel extends BaseHelper
         }
 
         $row = $this->database->find('#__whitelist_domains', 'first', [
-            'conditions' => ['domain' => $domain,'status' => 1],
-            ]
-        );
+            'conditions' => ['domain' => $domain, 'status' => 1],
+        ]);
 
-        if (!$this->isCli() && empty($row['fkuserid'])) {
+        if (!$this->isCli() && empty($row['user_id'])) {
             $this->isDeleted();
         }
 
         $siteid   = ($row['configid']) ? $row['configid'] : $row['id'];
         $configid = ($row['configid']) ? [$row['configid'],$row['id']] : [$row['id']];
 
-        $this->set('domain_owner', $row['fkuserid']);
+        $this->set('domain_owner', $row['user_id']);
         $this->set('configid', $configid);
         $this->set('siteid', $siteid);
 
-        $this->write('siteid', $siteid);
+        config(['app.siteid' => $siteid]);
 
-        if (!$this->isCli() && $row['fkuserid'] && $row['status'] != 1) {
+        if (!$this->isCli() && $row['user_id'] && $row['status'] != 1) {
             $this->isDeleted();
         }
     }

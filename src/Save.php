@@ -25,7 +25,7 @@ class Save extends BaseHelper
 
     public function beforeRun()
     {
-        $tables = $this->read('event_tables');
+        $tables = config('app.tables');
 
         $this->tables = array_merge($tables['default'], $tables['save']);
     }

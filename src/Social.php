@@ -33,7 +33,7 @@ class Social extends Helper
     public function beforeRun()
     {
         //get social configuration
-        $social = $this->read('members.social');
+        $social = config('account.social');
         if ($social['enable'] == true) {
             $this->config = $social;
 

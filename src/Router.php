@@ -63,7 +63,8 @@ class Router extends Helper
             }
         }
 
-        $config        = $this->read('seo');
+        $config = $this->config('router');
+
         $this->_short  = $config['short']['enable'];
         $this->_router = $config['router']['enable'];
         $this->_seo    = $config['seo']['enable'];
@@ -79,23 +80,17 @@ class Router extends Helper
 
         BaseRouter::addRewrite($this);
 
-        if (isset($this->server['HTTPS'])
-            && (($this->server['HTTPS'] == 'on')
-                || ($this->server['HTTPS'] == '1'))
-            ) {
+        if (env('HTTPS') == 'on' || env('HTTPS') == '1') {
             $this->_is_ssl = true;
         }
 
         if ($this->_router) {
             //get router from app config
-            if (file_exists($routes = _APP.'config'.DS.'routes.php')) {
-                $this->routes = require_once $routes;
-            }
-            //router for website
+            $this->routes = $config['routes'];
             //$this->routes['(:any)'] = 'index.php?option=shop&view=$1';
         }
 
-        $siteid  = $this->read('siteid');
+        $siteid  = $this->config('app.siteid');
         $forward = $config['forward'];
 
         if ($forward['enable']
@@ -144,7 +139,6 @@ class Router extends Helper
         }
 
         if ($type == '302') {
-            //Temporary (302)
             header('Location: '.$url);
 
             return true;
@@ -299,7 +293,7 @@ class Router extends Helper
 
         if (empty($save['uniqid'])) {
             //get config
-            $conf   = $this->read('short_url_config');
+            $conf   = $this->config('router.short.generate');
             $k      = $save['component'].':'.$save['view'];
             $key    = $conf[$k];
             $uniqid = $key['uniqid'];

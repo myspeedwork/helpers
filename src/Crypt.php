@@ -50,7 +50,7 @@ class Crypt extends Helper
         $this->algorithm = $algorithm;
 
         if (empty($key)) {
-            $this->key = $this->read('Security.cipherSeed');
+            $this->key = config('app.key');
         } else {
             $this->key = $key;
         }

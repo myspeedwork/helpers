@@ -162,7 +162,7 @@ class Events extends Helper
         }
 
         // Password is week
-        $pattern = '/'.$this->read('patterns.password').'/';
+        $pattern = '/'.config('app.patterns.password').'/';
         if ($user['plain_password'] && !preg_match($pattern, $user['plain_password'])) {
             $this->get('session')->set('password_change_required', 2);
             $this->get('session')->getFlashBag()->add('flash', 'Your Password is not strong enough. Please change it now!');

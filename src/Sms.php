@@ -20,7 +20,7 @@ class Sms extends Helper
 {
     public function sendSms($data = [])
     {
-        $config = $this->read('sms');
+        $config = $this->config('sms');
 
         $tags = (is_array($data['tags'])) ? $data['tags'] : [];
 
@@ -160,7 +160,7 @@ class Sms extends Helper
     public function logSms($data = [], $status = true)
     {
         //log enable
-        if (!$this->read('sms.log') || $data['log'] === false) {
+        if (!$this->config('sms.log') || $data['log'] === false) {
             return true;
         }
 

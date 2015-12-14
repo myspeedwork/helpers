@@ -11,7 +11,6 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Config\Configure;
 use Speedwork\Core\Helper;
 use Speedwork\Util\Utility;
 
@@ -22,7 +21,7 @@ class Metainfo extends Helper
 {
     public function index()
     {
-        $config = $this->read('metainfo');
+        $config = config('app.metainfo');
 
         if (!is_array($config)) {
             return false;
@@ -61,7 +60,7 @@ class Metainfo extends Helper
             $this->get('template')->setTitle($row['title']);
             $this->get('template')->setMetaData('og:title', $row['title'], 'property');
             $this->get('template')->setMetaData('twitter:title', $row['title'], 'property');
-            Configure::write('app.title', $row['title']);
+            config(['app.title' => $row['title']]);
         }
 
         if ($row['keywords']) {
@@ -102,7 +101,7 @@ class Metainfo extends Helper
 
         if (empty($save['uniqueid'])) {
             //get config
-            $conf   = $this->read('metainfo_url_config');
+            $conf   = config('app.metainfo.config');
             $k      = $save['option'].':'.$save['view'];
             $key    = $conf[$k];
             $uniqid = $key['uniqid'];

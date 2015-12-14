@@ -33,7 +33,7 @@ class Email extends Helper
         $data['name'] = $name;
 
         if (!is_array($data['config'])) {
-            $config = $this->read('mail');
+            $config = $this->config('mail');
         } else {
             $config = $data['config'];
         }
@@ -187,7 +187,7 @@ class Email extends Helper
 
         unset($id, $ids);
 
-        $config = $this->read('mail');
+        $config = $this->config('mail');
 
         if ($config['blacklist'] && $blacklist) {
             $list = $this->checkBlackList($list);
@@ -247,7 +247,7 @@ class Email extends Helper
     {
         $return = [];
         // insert template
-        $email_replace = $this->read('email.replace');
+        $email_replace = $this->config('email.replace');
         $array_content = (is_array($email_replace)) ? $email_replace : [];
 
         $array_content['sitename']    = _SITENAME;
@@ -261,7 +261,7 @@ class Email extends Helper
         $filename = str_replace('.html', '.tpl', $filename);
         $filename = $path.$filename;
 
-        $theme    = $this->read('email.theme');
+        $theme    = $this->config('email.theme');
         $theme    = ($theme) ? $theme : 'emailer.tpl';
         $template = $path.$theme;
 
@@ -308,7 +308,7 @@ class Email extends Helper
     public function logMail($data = [], $status = true)
     {
         //log enable
-        if (!$this->read('mail.log') || $data['log'] === false) {
+        if (!$this->config('mail.log') || $data['log'] === false) {
             return true;
         }
 
@@ -335,7 +335,7 @@ class Email extends Helper
 
     private function cleanUrl($url)
     {
-        $is_ssl = $this->read('is_ssl');
+        $is_ssl = $this->config('app.ssl');
         $prefix = ($is_ssl) ? 'https://' : 'http://';
 
         $short = substr($url, 0, 2);

@@ -116,7 +116,7 @@ class Pdf extends Helper
         $filename = str_replace('.html', '.tpl', $filename);
         $filename = $path.$filename;
 
-        $theme    = $this->read('pdf.theme');
+        $theme    = config('app.pdf.theme');
         $theme    = ($theme) ? $theme : 'theme.tpl';
         $template = $path.$theme;
 
