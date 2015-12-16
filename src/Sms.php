@@ -60,7 +60,7 @@ class Sms extends Helper
             return true;
         }
 
-        $config['provider'] = ($config['provider']) ? $config['provider'] : $data['provider'];
+        $provider = ($config['provider']) ? $config['provider'] : $data['provider'];
 
         if (empty($config['provider'])) {
             $data['reason'] = 'Provider not found';
@@ -69,9 +69,10 @@ class Sms extends Helper
             return true;
         }
 
-        $sms = $this->get('resolver')->helper($config['provider']);
+        $sms      = $this->get('resolver')->helper($provider);
+        $provider = strtolower($provider);
 
-        $sent = $sms->send($data, $config);
+        $sent = $sms->send($data, $config[$provider]);
 
         $status = $sent['status'];
 
