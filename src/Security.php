@@ -17,7 +17,7 @@ class Security extends Helper
 {
     public function isValidToken($token)
     {
-        $original = $this->session->get('token');
+        $original = $this->get('session')->get('token');
 
         if (empty($original)) {
             return true;
