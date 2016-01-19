@@ -135,9 +135,9 @@ class Events extends Helper
         $save['session_id'] = $this->get('session')->getId();
         $save['source']     = 'Website';
         $save['ip']         = Utility::ip();
-        $save['host']       = $this->server['HTTP_HOST'];
-        $save['agent']      = $this->server['HTTP_USER_AGENT'];
-        $save['referer']    = $this->server['HTTP_REFERER'];
+        $save['host']       = env('HTTP_HOST');
+        $save['agent']      = env('HTTP_USER_AGENT');
+        $save['referer']    = env('HTTP_REFERER');
         $save['created']    = time();
         $save['status']     = 1;
 
@@ -147,7 +147,7 @@ class Events extends Helper
 
         $user = $data['user'];
         // Time to change the password
-        $change_password = $this->link('index.php?option=members&view=changepass');
+        $change_password = $this->link('members/changepass');
 
         //1 : force change
         //2 : advice to change

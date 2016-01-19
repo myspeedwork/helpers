@@ -46,7 +46,7 @@ class Sekeywords extends Helper
 
     public function getKeywords()
     {
-        $url = $_SERVER['HTTP_REFERER'];
+        $url = env('HTTP_REFERER');
         $url = parse_url($url);
         if (!isset($url['query'])) {
             return false;
@@ -65,7 +65,10 @@ class Sekeywords extends Helper
                 }
                 $kString = urldecode(str_replace('+', ' ', ltrim(substr(rtrim($match[0], '&'), strlen($query) + 1), '=')));
 
-                return ['keyword' => $kString,'engine' => $host];
+                return [
+                    'keyword' => $kString,
+                    'engine'  => $host,
+                ];
             }
         }
     }

@@ -96,9 +96,9 @@ class Dav extends Helper
         // Start the Virtual File System on top of the Moodle hierarchy
         $server = new \Sabre\DAV\Server($root);
 
-        if (isset($this->server['HTTP_X_FORWARDED_SERVER']) && isset($this->server['HTTP_HOST'])) {
-            $this->server['REQUEST_URI'] = '/'.$this->server['HTTP_HOST'].$this->server['REQUEST_URI'];
-            $server->httpRequest         = new Sabre_HTTP_Request($this->server);
+        if (env('HTTP_X_FORWARDED_SERVER') && env('HTTP_HOST')) {
+            env(['REQUEST_URI' => '/'.env('HTTP_HOST').env('REQUEST_URI')]);
+            $server->httpRequest = new Sabre_HTTP_Request(env());
         }
 
         $basepath = _URL.'dev';
