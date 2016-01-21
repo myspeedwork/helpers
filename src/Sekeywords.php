@@ -38,7 +38,7 @@ class Sekeywords extends Helper
             $save                  = [];
             $save['keyword']       = $keyword;
             $save['search_engine'] = $engine;
-            $save['added']         = date('Y-m-d H:i:s');
+            $save['created']       = time();
 
             $this->database->save('#__addon_sekeywords', $save);
         }
