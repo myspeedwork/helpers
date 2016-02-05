@@ -24,7 +24,7 @@ class Dav extends Helper
 
         if (!$this->auth($auth)) {
             $auth->requireLogin();
-            die(_e("Authentication required\n"));
+            die(trans('Authentication required'));
         }
 
         $this->execute();
