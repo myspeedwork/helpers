@@ -8,7 +8,6 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
@@ -61,7 +60,9 @@ class Crypt extends Helper
 
     public function __destruct()
     {
-        mcrypt_module_close($this->td);
+        if (is_a($this->td, 'mcrypt')) {
+            mcrypt_module_close($this->td);
+        }
     }
 
     private function openModule()
@@ -76,7 +77,7 @@ class Crypt extends Helper
 
     private function genericInit()
     {
-        return mcrypt_genericInit($this->td, $this->key, $this->iv);
+        return mcrypt_generic_init($this->td, $this->key, $this->iv);
     }
 
     public function encrypt($input)
