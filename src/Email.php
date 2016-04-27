@@ -68,7 +68,7 @@ class Email extends Helper
                 $tags['html'] = $this->replace($tags, $data['html']);
             }
 
-            $d = $this->getContent($data['template'], $tags);
+            $d = $this->getContent($data, $tags);
 
             $data['html'] = $d['html'];
             $data['text'] = $d['text'];
@@ -243,7 +243,7 @@ class Email extends Helper
         return $att;
     }
 
-    public function getContent($filename, $tags = [])
+    public function getContent($data = [], $tags = [])
     {
         $return = [];
         // insert template
@@ -258,11 +258,13 @@ class Email extends Helper
         $tags = array_merge($tags, $array_content);
         $path = UPLOAD.'email'.DS.'en'.DS;
 
+        $filename = $data['template'];
         $filename = str_replace('.html', '.tpl', $filename);
         $filename = $path.$filename;
 
         $theme    = $this->config('email.theme');
         $theme    = ($theme) ? $theme : 'emailer.tpl';
+        $theme    = $data['theme'] ?: $theme;
         $template = $path.$theme;
 
         if (file_exists($filename)) {

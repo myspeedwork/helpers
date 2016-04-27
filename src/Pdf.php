@@ -104,8 +104,8 @@ class Pdf extends Helper
 
         $tags             = [];
         $tags['sitename'] = _SITENAME;
-        $tags['siteurl']  = _URL;
-        $tags['imageurl'] = _IMG_URL.'pdf_templates/';
+        $tags['siteurl']  = $this->cleanUrl(_URL);
+        $tags['imageurl'] = $this->cleanUrl(_IMG_URL.'pdf_templates/');
 
         $tags = array_merge($data['tags'], $tags);
 
@@ -135,5 +135,22 @@ class Pdf extends Helper
     public function __call($function, $args)
     {
         call_user_func_array([$this->pdf->pdf, $function], $args);
+    }
+
+    private function cleanUrl($url)
+    {
+        $ssl    = config('app.ssl');
+        $prefix = ($ssl) ? 'https://' : 'http://';
+
+        $short = substr($url, 0, 2);
+        if ($short == '//') {
+            $url = $prefix.ltrim($url, '//');
+        }
+
+        if (!preg_match('/^(http|https):/', $url)) {
+            $url = $prefix.$url;
+        }
+
+        return $url;
     }
 }

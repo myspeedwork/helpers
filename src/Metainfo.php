@@ -45,7 +45,7 @@ class Metainfo extends Helper
         $components = $config['components'];
 
         foreach ($matches as $match) {
-            $uniqid = $components[$match]['uniqid'];
+            $uniqid = $components[$match];
             if ($uniqid) {
                 $component = $match;
                 break;

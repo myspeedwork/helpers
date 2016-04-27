@@ -30,7 +30,7 @@ class Router extends Helper
 
     public $_is_ssl = false;
 
-    public $_domains = [];
+    public $_domains = null;
 
     public function index()
     {
@@ -88,16 +88,6 @@ class Router extends Helper
             //get router from app config
             $this->routes = $config['routes'];
             //$this->routes['(:any)'] = 'index.php?option=shop&view=$1';
-        }
-
-        $siteid  = $this->config('app.siteid');
-        $forward = $config['forward'];
-
-        if ($forward['enable']
-            && (empty($forward['site'])
-                || in_array($siteid, $forward['site']))
-            ) {
-            $this->_domains = $forward['config'];
         }
 
         if (($route == 'index.html'
@@ -205,6 +195,20 @@ class Router extends Helper
 
         //check is domain change
         $checked = false;
+
+        if ($this->_domains === null) {
+            $siteid = $this->config('app.siteid');
+
+            $config  = $this->config('router');
+            $forward = $config['forward'];
+
+            if ($forward['enable']
+                && (empty($forward['site'])
+                    || in_array($siteid, $forward['site']))
+                ) {
+                $this->_domains = $forward['config'];
+            }
+        }
 
         $matches = [
             $option.':'.$view,
