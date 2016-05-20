@@ -181,7 +181,7 @@ class Social extends Helper
 
         $this->database->save('#__user_social', $save);
 
-        return $this->database->insertId();
+        return $this->database->lastInsertId();
     }
 
     public function login($userid)

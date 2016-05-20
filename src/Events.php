@@ -142,7 +142,7 @@ class Events extends Helper
         $save['status']     = 1;
 
         $this->database->save('#__user_login_history', $save);
-        $id = $this->database->insertId();
+        $id = $this->database->lastInsertId();
         $this->get('session')->set('login_history_id', $id);
 
         $user = $data['user'];

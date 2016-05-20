@@ -62,7 +62,7 @@ class Transport extends Helper
 
         $id = null;
         if ($res) {
-            $id = $this->database->insertId();
+            $id = $this->database->lastInsertId();
         }
 
         if ($id) {
