@@ -13,23 +13,19 @@ namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
 use Speedwork\Util\Router as BaseRouter;
-use Speedwork\Util\Utility;
 
 /**
  * @author sankar <sankar.suda@gmail.com>
  */
 class Router extends Helper
 {
-    public $_config = [];
-    public $routes  = [];
-    public $_ssl    = [];
-
-    public $_short  = false;
-    public $_router = false;
-    public $_seo    = false;
-
-    public $_is_ssl = false;
-
+    public $_config  = [];
+    public $routes   = [];
+    public $_ssl     = [];
+    public $_short   = false;
+    public $_router  = false;
+    public $_seo     = false;
+    public $_is_ssl  = false;
     public $_domains = null;
 
     public function index()
@@ -50,7 +46,7 @@ class Router extends Helper
         }
 
         $routes = $this->get['routes'];
-        if ($routes && is_array($routes)) {
+        if (!empty($routes) && is_array($routes)) {
             foreach ($routes as $key => $value) {
                 $router = $this->get('resolver')->helper($key);
                 $res    = $router->route($value);
@@ -149,7 +145,7 @@ class Router extends Helper
 
     public function rewrite($link, $url)
     {
-        $parts  = Utility::parseQuery($link);
+        $parts  = $this->parseQuery($link);
         $option = $parts['option'];
         $view   = $parts['view'];
 
@@ -289,7 +285,7 @@ class Router extends Helper
     public function save($save = [], $conditions = [])
     {
         //sanitize short url
-        $parts             = Utility::parseQuery($save['original_url']);
+        $parts             = $this->parseQuery($save['original_url']);
         $save['component'] = $parts['component'];
         $save['view']      = $parts['view'];
 
@@ -364,7 +360,7 @@ class Router extends Helper
 
     public function checkShortUrl($save = [])
     {
-        if (self::iskeyexists($save)) {
+        if ($this->iskeyexists($save)) {
             $shorturl          = $save['short_url'];
             $lastdigit         = strrchr($shorturl, '-');
             $lastdigit         = (int) trim($lastdigit, '-');
@@ -372,7 +368,7 @@ class Router extends Helper
             $shorturl          = $shorturl.'-'.$adddigit;
             $save['short_url'] = $shorturl;
 
-            return self::checkShortUrl($save);
+            return $this->checkShortUrl($save);
         }
 
         return $save;
@@ -520,5 +516,21 @@ class Router extends Helper
         }
 
         return $link;
+    }
+
+    public function parseQuery($var)
+    {
+        $var = parse_url($var, PHP_URL_QUERY);
+        $var = html_entity_decode($var);
+        $var = explode('&', $var);
+        $arr = [];
+
+        foreach ($var as $val) {
+            $x          = explode('=', $val);
+            $arr[$x[0]] = $x[1];
+        }
+        unset($val, $x, $var);
+
+        return $arr;
     }
 }
