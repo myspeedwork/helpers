@@ -12,7 +12,7 @@
 namespace Speedwork\Helpers;
 
 /**
- * @author   Sankara Rao <sankar.suda@gmail.com>
+ * @author Sankar <sankar.suda@gmail.com>
  */
 class Finditerator implements \Iterator
 {

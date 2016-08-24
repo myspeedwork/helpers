@@ -22,7 +22,7 @@ class Delete extends BaseHelper
 
     public function beforeRun()
     {
-        $tables = $this->config('app.tables');
+        $tables = $this->config('database.tables');
 
         $this->tables = array_merge($tables['default'], $tables['delete']);
     }

@@ -20,11 +20,11 @@ class Sms extends Helper
 {
     public function sendSms($data = [])
     {
-        $config = $this->config('sms');
+        $config = config('sms');
 
         $tags = (is_array($data['tags'])) ? $data['tags'] : [];
 
-        $tags['sitename'] = _SITENAME;
+        $tags['sitename'] = config('app.name');
 
         if ($data['template']) {
             $name = strtolower($data['template']);

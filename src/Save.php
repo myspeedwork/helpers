@@ -12,12 +12,9 @@
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper as BaseHelper;
-use Speedwork\Util\Utility;
 
 /**
- *  Helper Class to manipulate data before save.
- *
- * @since  0.0.1
+ * @author Sankar <sankar.suda@gmail.com>
  */
 class Save extends BaseHelper
 {
@@ -25,17 +22,14 @@ class Save extends BaseHelper
 
     public function beforeRun()
     {
-        $tables = config('app.tables');
+        $tables = config('database.tables');
 
         $this->tables = array_merge($tables['default'], $tables['save']);
     }
 
     public function beforeSave(&$data, $table, &$details = [])
     {
-        $table = str_replace('#__', '', $table);
-
-        //$data = Utility::stripTags($data);
-
+        $table  = str_replace('#__', '', $table);
         $userid = $this->get('userid');
 
         if ($details['ignore'] === true || empty($userid)) {

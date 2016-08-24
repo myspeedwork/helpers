@@ -14,9 +14,7 @@ namespace Speedwork\Helpers;
 use Speedwork\Core\Helper;
 
 /**
- *  Helper Class to manipulate data before update.
- *
- * @since  0.0.1
+ * @author Sankar <sankar.suda@gmail.com>
  */
 class Speed extends Helper
 {

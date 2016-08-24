@@ -17,9 +17,7 @@ use Hybridauth\Hybridauth;
 use Speedwork\Core\Helper;
 
 /**
- *  Helper Class to link social accounts.
- *
- * @since  0.0.1
+ * @author Sankar <sankar.suda@gmail.com>
  */
 class Social extends Helper
 {

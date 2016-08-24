@@ -13,6 +13,9 @@ namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
 
+/**
+ * @author Sankar <sankar.suda@gmail.com>
+ */
 class Security extends Helper
 {
     public function isValidToken($token)

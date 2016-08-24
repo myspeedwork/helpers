@@ -15,9 +15,7 @@ use Speedwork\Core\Helper as BaseHelper;
 use Speedwork\Util\Utility;
 
 /**
- *  Helper Class to manipulate data before update.
- *
- * @since  0.0.1
+ * @author Sankar <sankar.suda@gmail.com>
  */
 class Update extends BaseHelper
 {
@@ -25,7 +23,7 @@ class Update extends BaseHelper
 
     public function beforeRun()
     {
-        $tables = config('app.tables');
+        $tables = config('database.tables');
 
         $this->tables = array_merge($tables['default'], $tables['update']);
     }

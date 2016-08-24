@@ -13,6 +13,9 @@ namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper as BaseHelper;
 
+/**
+ * @author Sankar <sankar.suda@gmail.com>
+ */
 class Whitelabel extends BaseHelper
 {
     public function run()

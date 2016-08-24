@@ -22,9 +22,7 @@ use Log;
 use Speedwork\Core\Helper;
 
 /**
- *  Helper Class to manipulate data before delete.
- *
- * @since  0.0.1
+ * @author Sankar <sankar.suda@gmail.com>
  */
 class Transfer extends Helper
 {

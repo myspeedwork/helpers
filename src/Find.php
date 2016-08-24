@@ -24,7 +24,7 @@ class Find extends Helper
 
     public function beforeRun()
     {
-        $tables = $this->config('app.tables');
+        $tables = $this->config('database.tables');
 
         $this->tables = array_merge($tables['default'], $tables['find']);
     }

@@ -9,14 +9,14 @@
  * file that was distributed with this source code.
  */
 
-//"ensepar/html2pdf": "1.0.*@dev"
-
 namespace Speedwork\Helpers;
 
 use HTML2PDF;
 use Speedwork\Core\Helper;
 
 /**
+ * @vendor "ensepar/html2pdf": "1.0.*@dev"
+ *
  * @author sankar <sankar.suda@gmail.com>
  */
 class Pdf extends Helper

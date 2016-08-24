@@ -15,11 +15,7 @@ namespace Speedwork\Helpers;
 use Intervention\Image\ImageManager;
 
 /**
- *  Helper Class to manipulate data before update.
- *
- * @since  0.0.1
- *
- * @author sankar <sankar.suda@gmail.com>
+ * @author Sankar <sankar.suda@gmail.com>
  */
 class Image
 {

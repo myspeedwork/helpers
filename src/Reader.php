@@ -25,8 +25,6 @@ use Traversable;
 /**
  * Reader class to get details from iterator.
  *
- * @since  0.0.1
- *
  * @author sankar <sankar.suda@gmail.com>
  */
 class Reader extends Helper

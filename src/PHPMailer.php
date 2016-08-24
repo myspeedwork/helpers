@@ -13,6 +13,11 @@ namespace Speedwork\Helpers;
 
 use PHPMailer as BaseMailer;
 
+/**
+ * @vendor "phpmailer/phpmailer": "~5.2"
+ *
+ * @author Sankar <sankar.suda@gmail.com>
+ */
 class PHPMailer
 {
     public function send($data = [], $config = [])
@@ -66,7 +71,6 @@ class PHPMailer
         }
 
         foreach ($data['attachments'] as $value) {
-            //loop the Attachments to be added ...
             $mail->AddAttachment($value['content']);
         }
 
@@ -76,6 +80,9 @@ class PHPMailer
         $mail->ClearAddresses();
         $mail->ClearAttachments();
 
-        return ['status' => $sent, 'message' => $mail->ErrorInfo];
+        return [
+            'status'  => $sent,
+            'message' => $mail->ErrorInfo,
+        ];
     }
 }
