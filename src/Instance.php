@@ -6,9 +6,8 @@
  * @link http://github.com/speedwork
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code
  */
-
 namespace Speedwork\Helpers;
 
 /**
@@ -28,7 +27,7 @@ class Instance
         }
 
         file_put_contents($pid, getmypid());
-        # remove the lock on exit (Control+C doesn't count as 'exit'?)
+        // remove the lock on exit (Control+C doesn't count as 'exit'?)
         register_shutdown_function(function () use ($pid) {
             if (file_exists($pid)) {
                 unlink($pid);

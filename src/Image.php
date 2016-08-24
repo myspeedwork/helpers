@@ -9,7 +9,6 @@
  *
  * @version 0.0.1
  */
-
 namespace Speedwork\Helpers;
 
 use Intervention\Image\ImageManager;

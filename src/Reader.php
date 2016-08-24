@@ -6,9 +6,8 @@
  * @link http://github.com/speedwork
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code
  */
-
 namespace Speedwork\Helpers;
 
 use Ddeboer\DataImport\Reader\ArrayReader;
@@ -42,7 +41,7 @@ class Reader extends Helper
         $lines      = ($ext == '.txt') ? 1 : 5;
         $duplicates = CsvReader::DUPLICATE_HEADERS_INCREMENT;
 
-        if (!in_array($ext, ['.array','.iterator'])) {
+        if (!in_array($ext, ['.array', '.iterator'])) {
             $file = new SplFileObject($reader);
             //Auto detect delimiter
             if (empty($options['delimiter'])) {
@@ -85,7 +84,7 @@ class Reader extends Helper
                 break;
         }
 
-        if (!in_array($ext, ['.array','.iterator']) && $options['header']) {
+        if (!in_array($ext, ['.array', '.iterator']) && $options['header']) {
             $reader->setHeaderRowNumber($options['header'] - 1, $duplicates);
         }
 

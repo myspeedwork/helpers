@@ -6,9 +6,8 @@
  * @link http://github.com/speedwork
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code
  */
-
 namespace Speedwork\Helpers;
 
 use Aws\S3\S3Client;
@@ -200,7 +199,7 @@ class Transfer extends Helper
                 continue;
             }
 
-            if (in_array($action, ['get','put'])) {
+            if (in_array($action, ['get', 'put'])) {
                 foreach ($contents as $key => $entry) {
                     if ($entry['type'] != 'file' || empty($entry['basename'])) {
                         continue;

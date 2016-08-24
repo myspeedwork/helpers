@@ -6,9 +6,8 @@
  * @link http://github.com/speedwork
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code
  */
-
 namespace Speedwork\Helpers;
 
 /**
@@ -101,7 +100,7 @@ class Finditerator implements \Iterator
 
     public function next_valid()
     {
-        return (isset($this->result_batch[$this->position + 1]) or $this->next_token);
+        return isset($this->result_batch[$this->position + 1]) or $this->next_token;
     }
 
     public function valid()

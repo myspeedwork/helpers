@@ -6,9 +6,8 @@
  * @link http://github.com/speedwork
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code
  */
-
 namespace Speedwork\Helpers;
 
 use Exception;
@@ -187,7 +186,7 @@ class Social extends Helper
         //get details from users table using this id
         $row = $this->database->find('#__users', 'first', [
                 'conditions' => ['userid' => $userid],
-                'fields'     => ['userid','email', 'password'],
+                'fields'     => ['userid', 'email', 'password'],
             ]
         );
 
@@ -250,7 +249,7 @@ class Social extends Helper
                     'provider_id' => $this->provider_id,
                     'identifier'  => $identifier,
                 ],
-                'fields' => ['id','user_id'],
+                'fields' => ['id', 'user_id'],
             ]
         );
 

@@ -8,7 +8,6 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
@@ -306,7 +305,7 @@ class Menu extends Helper
 
         $result = $this->database->find('#__core_menu', 'all', [
             'conditions' => $cond,
-            'order'      => ['parent_id','ordering'],
+            'order'      => ['parent_id', 'ordering'],
             'cache'      => 'daily',
         ]);
 
@@ -330,7 +329,7 @@ class Menu extends Helper
 
     public function menuIDToName($id, $implode = ',')
     {
-        $res      = $this->database->find('#__core_menu', 'all', ['conditions' => ['menu_id' => $id],'fields' => ['name']]);
+        $res      = $this->database->find('#__core_menu', 'all', ['conditions' => ['menu_id' => $id], 'fields' => ['name']]);
         $menuName = [];
         foreach ($res as $data) {
             $menuName[] = $data['name'];
@@ -347,14 +346,14 @@ class Menu extends Helper
 
         $res = $this->database->find('#__core_menu', 'all', [
             'conditions' => ['menu_id' => $id],
-            'fields'     => ['name','link','menu_id','menu_type'],
-            'order'      => ['parent_id ASC','ordering'],
+            'fields'     => ['name', 'link', 'menu_id', 'menu_type'],
+            'order'      => ['parent_id ASC', 'ordering'],
         ]);
 
         $menu = [];
         foreach ($res as $data) {
             $link   = $this->parselink($data);
-            $menu[] = ['name' => $data['name'],'link' => $link];
+            $menu[] = ['name' => $data['name'], 'link' => $link];
         }
 
         return $menu;
@@ -365,7 +364,7 @@ class Menu extends Helper
         $categoriesurl = [];
         if ($cats) {
             $menus = $this->database->find('#__core_menu', 'all', [
-                'fields'     => ['menu_id','name','parent_id','link'],
+                'fields'     => ['menu_id', 'name', 'parent_id', 'link'],
                 'order'      => ['parent_id'],
                 'conditions' => ['menu_id' => $cats],
             ]);
@@ -421,7 +420,7 @@ class Menu extends Helper
         if (!$id) {
             return [];
         }
-        $row = $this->database->find('#__core_menu', 'first', ['conditions' => ['menu_id' => $id],'fields' => ['name','parent_id']]);
+        $row = $this->database->find('#__core_menu', 'first', ['conditions' => ['menu_id' => $id], 'fields' => ['name', 'parent_id']]);
         $m[] = $row['name'];
         $pid = $row['parent_id'];
 
@@ -440,15 +439,15 @@ class Menu extends Helper
 
         $res = $this->database->find('#__core_menu', 'all', [
             'conditions' => ['menu_id' => $id],
-            'fields'     => ['name','link','menu_id','menu_type','parent_id'],
-            'order'      => ['parent_id DESC','ordering'],
+            'fields'     => ['name', 'link', 'menu_id', 'menu_type', 'parent_id'],
+            'order'      => ['parent_id DESC', 'ordering'],
         ]);
 
         $menu = [];
         foreach ($res as $data) {
             $pid    = $data['parent_id'];
             $link   = $this->parselink($data, false);
-            $menu[] = ['name' => $data['name'],'link' => $link];
+            $menu[] = ['name' => $data['name'], 'link' => $link];
 
             if ($pid != 0) {
                 $menu = array_merge($menu, $this->getParentLinks($pid));
