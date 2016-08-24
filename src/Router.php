@@ -6,9 +6,8 @@
  * @link http://github.com/speedwork
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code
  */
-
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
@@ -385,7 +384,7 @@ class Router extends Helper
         // Loop through the route array looking for wild-cards
         foreach ($this->routes as $key => $val) {
             // Convert wild-cards to RegEx
-            $key = str_replace([':any',':num'], ['.+', '[0-9]+'], $key);
+            $key = str_replace([':any', ':num'], ['.+', '[0-9]+'], $key);
 
             // Does the RegEx match?
             if (preg_match('#^'.$key.'$#', $uri)) {
@@ -446,7 +445,7 @@ class Router extends Helper
                 }
 
                 // replace :any and :num with .+ and [0-9]+, respectively
-                $uriRegex = str_replace([':any',':num'], ['.+', '[0-9]+'], $uriRegex);
+                $uriRegex = str_replace([':any', ':num'], ['.+', '[0-9]+'], $uriRegex);
 
                 // regex creation is finished.  Test it against uri
                 if (preg_match('#^'.$uriRegex.'$#', $uri)) {

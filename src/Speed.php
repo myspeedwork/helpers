@@ -6,9 +6,8 @@
  * @link http://github.com/speedwork
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code
  */
-
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
@@ -137,7 +136,7 @@ class Speed extends Helper
 
         $maxord = $row['morder'];
 
-        return ($maxord + 1);
+        return $maxord + 1;
     }
 
     public function reOrder($table, $where = [], $field = 'id')

@@ -6,9 +6,8 @@
  * @link http://github.com/speedwork
  *
  * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * file that was distributed with this source code
  */
-
 namespace Speedwork\Helpers;
 
 use HTML2PDF;
@@ -77,7 +76,7 @@ class Pdf extends Helper
      *I: send the file inline to the browser .
      *D: file download with the name given by name.
      *F: save to a local server file with the name given by name.
-     *S: return the document as a string (name is ignored).
+     *S: return the document as a string (name is ignored)
      */
     public function send($data, $name = 'document.pdf', $output = 'D')
     {
