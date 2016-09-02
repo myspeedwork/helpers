@@ -1,13 +1,14 @@
 <?php
 
-/**
+/*
  * This file is part of the Speedwork package.
  *
- * @link http://github.com/speedwork
+ * (c) Sankar <sankar.suda@gmail.com>
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code
  */
+
 namespace Speedwork\Helpers;
 
 /**
@@ -126,7 +127,7 @@ class Minifier
                     $url = $path.'/';
                 }
 
-                if (substr($file, 0, 1) != '/' && substr($file, 0, 5) != 'http:'  && substr($file, 0, 6) != 'https:') {
+                if (substr($file, 0, 1) != '/' && substr($file, 0, 5) != 'http:' && substr($file, 0, 6) != 'https:') {
                     $absolute_path = $url.ltrim($file, '.');
                     $content       = str_replace($find, 'url('.$absolute_path.')', $content);
                 }
