@@ -11,7 +11,6 @@
 
 namespace Speedwork\Helpers;
 
-use Cake\Event\EventManager;
 use Speedwork\Core\Helper;
 use Speedwork\Util\Utility;
 
@@ -29,21 +28,21 @@ class Events extends Helper
     {
         $events = $this;
 
-        EventManager::instance()->attach(function ($event) use ($events) {
+        $this->get('dispatcher')->addListener('members.after.login', function ($event) use ($events) {
             $events->membersAfterLogin($event);
-        }, 'event.members.after.login');
+        });
 
-        EventManager::instance()->attach(function ($event) use ($events) {
+        $this->get('dispatcher')->addListener('members.before.logout', function ($event) use ($events) {
             $events->membersBeforeLogout($event);
-        }, 'event.members.before.logout');
+        });
 
-        EventManager::instance()->attach(function ($event) use ($events) {
+        $this->get('dispatcher')->addListener('members.before.login', function ($event) use ($events) {
             $events->membersBeforeLogin($event);
-        }, 'event.members.before.login');
+        });
 
-        EventManager::instance()->attach(function ($event) use ($events) {
+        $this->get('dispatcher')->addListener('members.login.failed', function ($event) use ($events) {
             $events->membersLoginFailed($event);
-        }, 'event.members.login.failed');
+        });
     }
 
     public function membersLoginFailed($event)
@@ -58,12 +57,9 @@ class Events extends Helper
             );
         }
 
-        $data = $event->data;
-        $ip   = Utility::ip();
-
         $save                    = [];
-        $save['username']        = $data['username'];
-        $save['ip_address']      = $ip;
+        $save['username']        = $event['username'];
+        $save['ip_address']      = ip();
         $save['attempts']        = 1;
         $save['last_attempt_at'] = time();
 
@@ -72,14 +68,10 @@ class Events extends Helper
 
     public function membersBeforeLogin($event)
     {
-        $data = $event->data;
-        $ip   = Utility::ip();
-
         // Check is account blocked
         $row = $this->database->find('#__user_login_attempts', 'first', [
-            'conditions' => ['OR' => ['username' => $data['username'], 'ip_address' => $ip]],
-            ]
-        );
+            'conditions' => ['OR' => ['username' => $event['username'], 'ip_address' => ip()]],
+        ]);
 
         if (empty($row['id'])) {
             return true;
@@ -100,7 +92,7 @@ class Events extends Helper
 
         $event->stopPropagation();
 
-        $event->result = [
+        $event->results = [
             'status'  => 'ERROR',
             'message' => 'Your account is temporarly blocked for an hour due to multiple invalid attempts.',
         ];
@@ -108,14 +100,11 @@ class Events extends Helper
 
     public function membersAfterLogin($event)
     {
-        $data = $event->data;
-
         $attempt_id = $this->get('session')->get('attempt_id');
 
         if ($attempt_id) {
-            $ip = Utility::ip();
             $this->database->delete('#__user_login_attempts',
-                ['OR' => ['username' => $data['user']['username'], 'ip_address' => $ip]]
+                ['OR' => ['username' => $event['user']['username'], 'ip_address' => ip()]]
             );
 
             $this->get('session')->remove('attempt_id');
@@ -127,7 +116,7 @@ class Events extends Helper
         }
 
         //save in login history
-        if (empty($data['userid'])) {
+        if (empty($event['userid'])) {
             return true;
         }
 
@@ -145,7 +134,7 @@ class Events extends Helper
         $id = $this->database->lastInsertId();
         $this->get('session')->set('login_history_id', $id);
 
-        $user = $data['user'];
+        $user = $event['user'];
         // Time to change the password
         $change_password = $this->link('members/changepass');
 
