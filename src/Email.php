@@ -253,7 +253,7 @@ class Email extends Helper
         $array_content['sitename']    = _SITENAME;
         $array_content['admin_email'] = _ADMIN_MAIL;
         $array_content['siteurl']     = $this->cleanUrl(_URL);
-        $array_content['email_url']   = $this->cleanUrl(_IMG_URL.'email/en/');
+        $array_content['email_url']   = $this->cleanUrl(_IMAGES.'email/en/');
 
         $tags = array_merge($tags, $array_content);
         $path = UPLOAD.'email'.DS.'en'.DS;

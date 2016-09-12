@@ -12,7 +12,7 @@
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
-use Speedwork\Util\Router as BaseRouter;
+use Speedwork\Core\Router as BaseRouter;
 
 /**
  * @author sankar <sankar.suda@gmail.com>

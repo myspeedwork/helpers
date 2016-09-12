@@ -12,7 +12,7 @@
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
-use Speedwork\Util\Router as BaseRouter;
+use Speedwork\Core\Router as BaseRouter;
 
 /**
  * @author sankar <sankar.suda@gmail.com>
@@ -130,17 +130,17 @@ class Router extends Helper
             return true;
         }
 
-        $var = parse_url($url, PHP_URL_QUERY);
-        parse_str($var, $var);
+        $values = parse_url($url, PHP_URL_QUERY);
+        parse_str($values, $values);
 
-        foreach ($var as $key => $val) {
+        foreach ($values as $key => $val) {
             $_REQUEST[$key]   = $val;
             $_GET[$key]       = $val;
             $this->data[$key] = $val;
             $this->get[$key]  = $val;
         }
 
-        unset($val);
+        return $values;
     }
 
     public function rewrite($link, $url)
@@ -200,8 +200,8 @@ class Router extends Helper
 
             if ($forward['enable']
                 && (empty($forward['site'])
-                    || in_array($siteid, $forward['site']))
-                ) {
+                || in_array($siteid, $forward['site']))
+            ) {
                 $this->_domains = $forward['config'];
             }
         }
@@ -230,7 +230,8 @@ class Router extends Helper
         }
 
         if (!preg_match('/(http|https):\/\//', $link)
-            && substr($link, 0, 2) != '//') {
+            && substr($link, 0, 2) != '//'
+        ) {
             $link = $url.$link;
         }
 
@@ -255,14 +256,16 @@ class Router extends Helper
             return false;
         }
 
-        $data = $this->database->find('#__addon_shorturls', 'first', [
+        $data = $this->database->find(
+            '#__addon_shorturls', 'first', [
             'fields'     => ['short_url'],
             'conditions' => [
                 'status'    => 1,
                 'component' => $option,
                 'uniqid'    => $uniqid,
             ],
-        ]);
+            ]
+        );
 
         return $data['short_url'];
     }
@@ -273,7 +276,8 @@ class Router extends Helper
             return false;
         }
 
-        $data = $this->database->find('#__addon_shorturls', 'first', [
+        $data = $this->database->find(
+            '#__addon_shorturls', 'first', [
             'fields'     => ['original_url', 'redirect'],
             'conditions' => ['OR' => ['short_url' => $shorturl, 'id' => $shorturl], 'status' => 1],
             ]
@@ -323,7 +327,8 @@ class Router extends Helper
         if (count($conditions) > 0) {
             $conditions['component'] = $save['component'];
 
-            $row = $this->database->find('#__addon_shorturls', 'first', [
+            $row = $this->database->find(
+                '#__addon_shorturls', 'first', [
                 'conditions' => $conditions,
                 ]
             );
@@ -342,7 +347,8 @@ class Router extends Helper
 
     public function iskeyexists($save = [])
     {
-        $data = $this->database->find('#__addon_shorturls', 'first', [
+        $data = $this->database->find(
+            '#__addon_shorturls', 'first', [
             'conditions' => ['short_url' => $save['shorturl']],
             ]
         );
@@ -485,9 +491,9 @@ class Router extends Helper
         return false;
     }
 
-  /* SEO NORMAL
-   * replace only component and view
-   */
+    /* SEO NORMAL
+    * replace only component and view
+    */
     public function setSeoNormal($parts)
     {
         $option = $parts['option'];

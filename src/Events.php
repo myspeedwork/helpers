@@ -28,28 +28,37 @@ class Events extends Helper
     {
         $events = $this;
 
-        $this->get('dispatcher')->addListener('members.after.login', function ($event) use ($events) {
-            $events->membersAfterLogin($event);
-        });
+        $this->get('events')->addListener(
+            'members.after.login', function ($event) use ($events) {
+                $events->membersAfterLogin($event);
+            }
+        );
 
-        $this->get('dispatcher')->addListener('members.before.logout', function ($event) use ($events) {
-            $events->membersBeforeLogout($event);
-        });
+        $this->get('events')->addListener(
+            'members.before.logout', function ($event) use ($events) {
+                $events->membersBeforeLogout($event);
+            }
+        );
 
-        $this->get('dispatcher')->addListener('members.before.login', function ($event) use ($events) {
-            $events->membersBeforeLogin($event);
-        });
+        $this->get('events')->addListener(
+            'members.before.login', function ($event) use ($events) {
+                $events->membersBeforeLogin($event);
+            }
+        );
 
-        $this->get('dispatcher')->addListener('members.login.failed', function ($event) use ($events) {
-            $events->membersLoginFailed($event);
-        });
+        $this->get('events')->addListener(
+            'members.login.failed', function ($event) use ($events) {
+                $events->membersLoginFailed($event);
+            }
+        );
     }
 
     public function membersLoginFailed($event)
     {
         $attempt_id = $this->get('session')->get('attempt_id');
         if ($attempt_id) {
-            return $this->database->update('#__user_login_attempts', [
+            return $this->database->update(
+                '#__user_login_attempts', [
                 'attempts = attempts + 1',
                 'last_attempt_at' => time(),
                 ],
@@ -69,9 +78,11 @@ class Events extends Helper
     public function membersBeforeLogin($event)
     {
         // Check is account blocked
-        $row = $this->database->find('#__user_login_attempts', 'first', [
+        $row = $this->database->find(
+            '#__user_login_attempts', 'first', [
             'conditions' => ['OR' => ['username' => $event['username'], 'ip_address' => ip()]],
-        ]);
+            ]
+        );
 
         if (empty($row['id'])) {
             return true;
@@ -103,7 +114,8 @@ class Events extends Helper
         $attempt_id = $this->get('session')->get('attempt_id');
 
         if ($attempt_id) {
-            $this->database->delete('#__user_login_attempts',
+            $this->database->delete(
+                '#__user_login_attempts',
                 ['OR' => ['username' => $event['user']['username'], 'ip_address' => ip()]]
             );
 
@@ -181,9 +193,11 @@ class Events extends Helper
     {
         $id = $this->get('session')->get('login_history_id');
         if ($id) {
-            $this->database->update('#__user_login_history', [
+            $this->database->update(
+                '#__user_login_history', [
                 'status' => 2, 'modified' => time(),
-                ], ['id' => $id]);
+                ], ['id' => $id]
+            );
         }
     }
 }

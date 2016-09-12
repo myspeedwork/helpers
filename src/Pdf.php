@@ -105,13 +105,11 @@ class Pdf extends Helper
         $tags             = [];
         $tags['sitename'] = _SITENAME;
         $tags['siteurl']  = $this->cleanUrl(_URL);
-        $tags['imageurl'] = $this->cleanUrl(_IMG_URL.'pdf_templates/');
+        $tags['imageurl'] = $this->cleanUrl(_IMAGES.'pdf_templates/');
 
-        $tags = array_merge($data['tags'], $tags);
-
+        $tags     = array_merge($data['tags'], $tags);
         $filename = $data['template'];
-
-        $path = UPLOAD.'pdf_templates'.DS;
+        $path     = UPLOAD.'pdf_templates'.DS;
 
         $filename = str_replace('.html', '.tpl', $filename);
         $filename = $path.$filename;
