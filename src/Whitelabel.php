@@ -20,14 +20,14 @@ class Whitelabel extends BaseHelper
 {
     public function run()
     {
-        if (!config('app.whitelabel')) {
+        if (!$this->config('app.whitelabel')) {
             return false;
         }
 
         $domain = strtolower(ltrim(env('HTTP_HOST'), 'www.'));
 
         if ($this->isCli()) {
-            $domain = config('app.cli_domain');
+            $domain = $this->config('app.cli_domain');
         }
 
         if (empty($domain)) {
@@ -39,7 +39,7 @@ class Whitelabel extends BaseHelper
         ]);
 
         if (!$this->isCli() && empty($row['user_id'])) {
-            $this->isDeleted();
+            return $this->isDeleted();
         }
 
         $siteid   = ($row['configid']) ? $row['configid'] : $row['id'];
@@ -49,10 +49,10 @@ class Whitelabel extends BaseHelper
         $this->set('configid', $configid);
         $this->set('siteid', $siteid);
 
-        config(['app.siteid' => $siteid]);
+        $this->config(['app.siteid' => $siteid]);
 
         if (!$this->isCli() && $row['user_id'] && $row['status'] != 1) {
-            $this->isDeleted();
+            return $this->isDeleted();
         }
     }
 
@@ -60,7 +60,6 @@ class Whitelabel extends BaseHelper
     {
         $paths   = [];
         $paths[] = APP.'public'.DS.'templates'.DS.'system'.DS.'deleted.tpl';
-        $paths[] = SYS.'templates'.DS.'system'.DS.'deleted.tpl';
 
         foreach ($paths as $path) {
             if (file_exists($path)) {
@@ -69,7 +68,8 @@ class Whitelabel extends BaseHelper
                 break;
             }
         }
-        die('<h2 class="deleted">This site is deleted. Please contact our support team.</h2>');
+
+        return false;
     }
 
     private function isCli()

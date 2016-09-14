@@ -12,7 +12,6 @@
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
-use Speedwork\Util\Utility;
 
 /**
  * @author sankar <sankar.suda@gmail.com>
@@ -36,19 +35,19 @@ class Analytics extends Helper
 
                 if (count($dateRange) == 1) {
                     $conditions[] = [$timeField.' BETWEEN ? AND ?' => [
-                        Utility::strtotime($dateRange[0].' 00:00:00'),
-                        Utility::strtotime($dateRange[0].' 23:59:59'),
+                        $this->toTime($dateRange[0].' 00:00:00'),
+                        $this->toTime($dateRange[0].' 23:59:59'),
                         ],
                     ];
                 } elseif (count($dateRange) == 2) {
                     $conditions[] = [$timeField.' BETWEEN ? AND ?' => [
-                        Utility::strtotime($dateRange[0].' 00:00:00'),
-                        Utility::strtotime($dateRange[1].' 23:59:59'),
+                        $this->toTime($dateRange[0].' 00:00:00'),
+                        $this->toTime($dateRange[1].' 23:59:59'),
                         ],
                     ];
                 }
             } elseif (!$this->post['nodaterange']) {
-                $from         = Utility::strtotime(date('Y-m-d', strtotime('-7 days')).' 00:00:00');
+                $from         = $this->toTime(date('Y-m-d', strtotime('-7 days')).' 00:00:00');
                 $conditions[] = [$timeField." > $from"];
             }
             $conditions[] = [$timeField.' < unix_timestamp(now())'];
@@ -57,16 +56,16 @@ class Analytics extends Helper
                 $dateRange = explode('-', $this->post['daterange']);
 
                 if (count($dateRange) == 1) {
-                    $conditions[] = [$timeField => Utility::strtotime($dateRange[0], true)];
+                    $conditions[] = [$timeField => $this->toTime($dateRange[0], true)];
                 } elseif (count($dateRange) == 2) {
                     $conditions[] = [$timeField.' BETWEEN ? AND ?' => [
-                        Utility::strtotime($dateRange[0], true),
-                        Utility::strtotime($dateRange[1], true),
+                        $this->toTime($dateRange[0], true),
+                        $this->toTime($dateRange[1], true),
                         ],
                     ];
                 }
             } elseif (!$this->post['nodaterange']) {
-                $from         = Utility::strtotime(date('Y-m-d', strtotime('-7 days')), true);
+                $from         = $this->toTime(date('Y-m-d', strtotime('-7 days')), true);
                 $conditions[] = [$timeField." > '$from'"];
             }
         }
@@ -76,15 +75,13 @@ class Analytics extends Helper
             $user = $this->database->find('#__user_to_user', 'list', [
                 'conditions' => ['fkuserid' => $this->userid],
                 'fields'     => ['fkuserid1'],
-                ]
-            );
+            ]);
 
             $conditions[] = ['fkuserid ' => $user + [$this->userid]];
         } elseif ($this->post['subuser']) {
             $conditions[] = ['fkuserid ' => $this->post['subuser']];
         }
 
-        //$conditions[] = array('delivtime!=0');
         return $conditions;
     }
 
@@ -115,7 +112,7 @@ class Analytics extends Helper
         foreach ($series as $key => $value) {
             $value = (is_array($value)) ? $value[0] : $value;
 
-            if ($callback != null && is_callable($callback)) {
+            if ($callback !== null && is_callable($callback)) {
                 $value = call_user_func($callback, $value);
             }
 
@@ -190,7 +187,7 @@ class Analytics extends Helper
                 if (is_array($headers)) {
                     foreach ($headers as $key => $value) {
                         $title = $data[$value][$category];
-                        if ($callback != null && is_callable($callback)) {
+                        if ($callback !== null && is_callable($callback)) {
                             $title = call_user_func_array($callback, [
                                 $title,
                                 $key,
@@ -221,8 +218,7 @@ class Analytics extends Helper
                 $table .= '</tr>';
             }
         }
-        $table .= '</tbody>
-            </table> ';
+        $table .= '</tbody></table> ';
 
         return $table;
     }

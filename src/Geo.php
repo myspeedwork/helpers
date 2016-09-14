@@ -20,7 +20,7 @@ class Geo
 {
     public function get($address = null, $db = 'GeoLite2-City.mmdb')
     {
-        if ($address == null) {
+        if ($address === null) {
             $address = ip();
         }
 

@@ -34,10 +34,8 @@ class Content extends Helper
             }
         }
 
-      //replace gallery plugin tage with gallery
-      //<!-- <speed:module name="banners.slider" id="1" /> -->
-
-        //$pattern = '#<speed:(module|component) name="([^"]+)" id="([^"]+)" \/>#iU';
+        //replace gallery plugin tage with gallery
+        //<!-- <speed:module name="banners.slider" id="1" /> -->
         $pattern = '#<speed:(module|component) name="([^"]+)" (.*)\/>#iU';
         $matches = [];
 

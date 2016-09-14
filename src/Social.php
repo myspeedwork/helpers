@@ -32,7 +32,7 @@ class Social extends Helper
     {
         //get social configuration
         $social = config('account.social');
-        if ($social['enable'] == true) {
+        if ($social['enable'] === true) {
             $this->config = $social;
 
             //true|false|"error"|"info"
@@ -108,8 +108,6 @@ class Social extends Helper
             }
             $adapter       = $this->instance->authenticate($this->network);
             $this->profile = $adapter->getUserProfile();
-
-            //$this->profile = $this->setProfile($this->profile);
 
             if ($this->getProfile('identifier')) {
                 return $this->proceed();
@@ -371,9 +369,8 @@ class Social extends Helper
                 $this->adapter = $this->link->getAdapter($usersession['provider']);
             } catch (Exception $e) {
                 $error = $this->errorhandler($e->getCode());
-                //Log::write('publishpost', 'Publish Error: User = '.json_encode($usersession).' Post = '.$message.' Error ='.$e->getMessage().' Custom = '.$error);
 
-                return ['status' => 'ERROR', 'message' => $e->getMessage()];
+                return ['status' => 'ERROR', 'message' => $error];
             }
         }
 
@@ -406,9 +403,8 @@ class Social extends Helper
             }
         } catch (Exception $e) {
             $error = $this->errorhandler($e->getCode());
-            //Log::write('publishpost', 'Publish Error: User = '.json_encode($usersession).' Post = '.$message.' Error ='.$e->getMessage().' Custom = '.$error);
 
-            return ['status' => 'ERROR', 'message' => $e->getMessage()];
+            return ['status' => 'ERROR', 'message' => $error];
         }
 
         return ['status' => 'OK', 'message' => 'Success'];

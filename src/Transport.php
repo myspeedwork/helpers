@@ -18,12 +18,17 @@ use Speedwork\Core\Helper;
  */
 class Transport extends Helper
 {
-    public function getTransfer($value, $field = 'id')
+    public function getTransfer($value, $field = 'id', $userid = null)
     {
+        $conditions   = [];
+        $conditions[] = [$field => $value];
+        if ($userid) {
+            $conditions[] = ['user_id' => $userid];
+        }
+
         return $this->database->find('#__transport_transfer', 'first', [
-            'conditions' => [$field => $value],
-            ]
-        );
+            'conditions' => $conditions,
+        ]);
     }
 
     public function getConfig($value, $field = 'id')
@@ -34,23 +39,23 @@ class Transport extends Helper
 
         return $this->database->find('#__transport_config', 'first', [
             'conditions' => [$field => $value, 'status' => 1],
-            ]
-        );
+        ]);
     }
 
-    public function setTransfer($name, $value, $meta = [], $field = 'service')
+    public function setTransfer($name, $transfer, $meta = [], $field = 'service')
     {
-        $transfer = $this->getTransfer($value, $field);
+        if (!is_array($transfer)) {
+            $transfer = $this->getTransfer($transfer, $field);
+        }
 
         if (!is_array($name)) {
             $name = [$name];
         }
 
         $save                   = [];
-        $save['fkuserid']       = $this->userid;
+        $save['user_id']        = $this->userid;
         $save['fk_transfer_id'] = $transfer['id'];
         $save['service']        = $transfer['service'];
-        //$save['basename'] = $name;
         $save['transfer_files'] = json_encode($name);
         $save['meta_value']     = json_encode($meta);
         $save['created']        = time();

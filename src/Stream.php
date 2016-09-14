@@ -34,10 +34,6 @@ class Stream
 
     public function start($filename)
     {
-        if (ini_get('zlib.output_compression')) {
-            ini_set('zlib.output_compression', 'Off');
-        }
-
         $ext  = strtolower(strrchr($filename, '.'));
         $type = $this->mime_types[$ext];
 
@@ -46,13 +42,10 @@ class Stream
         }
 
         set_time_limit(0);
-        //header("Content-Type: application/force-download");
         header('Content-Type: application/octet-stream');
-        //header("Content-Type: application/download");
         header('Content-Description: File Transfer');
         header('Content-Type: '.$type);
         header('Content-Disposition: attachment;filename="'.$filename.'"');
-        //header("Cache-control: private");
 
         $seconds = 30;
         header('Expires: '.gmdate('D, d M Y H:i:s', time() + $seconds).' GMT');

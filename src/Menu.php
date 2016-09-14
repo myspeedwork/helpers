@@ -46,7 +46,7 @@ class Menu extends Helper
 
                     $html .= ($ul !== true && $i == 1) ? '<ul '.($hide ? ' style="display:none"' : '').'>' : '';
 
-                    if ($ul == false && $i == $total) {
+                    if ($ul === false && $i == $total) {
                         $html .= '</ul></li>';
                     }
                 }
@@ -491,7 +491,7 @@ class Menu extends Helper
             $v    = $data[$match[1]];
             $link = str_replace($k, $v, $link);
         }
-        if ($linked == true) {
+        if ($linked === true) {
             return $this->link($link);
         } else {
             return $link;

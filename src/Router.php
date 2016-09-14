@@ -25,7 +25,7 @@ class Router extends Helper
     public $_short   = false;
     public $_router  = false;
     public $_seo     = false;
-    public $_is_ssl  = false;
+    public $is_ssl   = false;
     public $_domains = null;
 
     public function index()
@@ -77,13 +77,12 @@ class Router extends Helper
         BaseRouter::addRewrite($this);
 
         if (env('HTTPS') == 'on' || env('HTTPS') == '1') {
-            $this->_is_ssl = true;
+            $this->is_ssl = true;
         }
 
         if ($this->_router) {
             //get router from app config
             $this->routes = $config['routes'];
-            //$this->routes['(:any)'] = 'index.php?option=shop&view=$1';
         }
 
         if (($route == 'index.html'
@@ -240,7 +239,7 @@ class Router extends Helper
         if ($this->_ssl[$k] || $this->_ssl[$option.':*']) {
             $ssl = true;
         }
-        if (($ssl || $this->_is_ssl) && $checked == false) {
+        if (($ssl === true || $this->is_ssl === true) && $checked === false) {
             $link = str_replace('http://', 'https://', $link);
         }
 
@@ -415,10 +414,6 @@ class Router extends Helper
 
         // Loop through all routes to check for back-references, then see if the user-supplied URI matches one
         foreach ($this->routes as $key => $val) {
-            // bailing if route contains ungrouped regex, otherwise this fails badly
-            /*if (preg_match('/[^\(][.+?{\:]/', $key)) {
-                continue;
-            }*/
             // Do we have a back-reference?
             if (strpos($val, '$') !== false && strpos($key, '(') !== false) {
                 // Find all back-references in custom route and CI route

@@ -50,21 +50,6 @@ class Instance
     {
         if (file_exists($pid)) {
             $id = file_get_contents($pid);
-            /*if (function_exists('exec')) {
-                $command = 'ps -p ' . $pid;
-                exec($command, $op);
-                if (!isset($op[1])) {
-                    @unlink($pid);
-                    return false;
-                }
-            }else{
-                $mtime = filemtime($pid);
-                if ($mtime > strtotime('-1 HOUR')) {
-                    @unlink($pid);
-                    return false;
-                }
-            }*/
-
             echo '['.$name.'] running ('.$id.')...'."\n";
 
             return true;

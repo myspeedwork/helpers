@@ -12,13 +12,13 @@
 namespace Speedwork\Helpers;
 
 use Aws\S3\S3Client;
+use Exception;
 use League\Flysystem\Adapter\AwsS3;
 use League\Flysystem\Adapter\Ftp;
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Adapter\Sftp;
 use League\Flysystem\Filesystem;
 use League\Flysystem\MountManager;
-use Log;
 use Speedwork\Core\Helper;
 
 /**
@@ -75,26 +75,25 @@ class Transfer extends Helper
         }
 
         $rows = $this->database->find('#__transport_transfer', 'all', [
-                'conditions' => $conditions,
-                'joins'      => $joins,
-                'alias'      => 'tt',
-                'fields'     => ['tt.*'],
-            ]
-        );
+            'conditions' => $conditions,
+            'joins'      => $joins,
+            'alias'      => 'tt',
+            'fields'     => ['tt.*'],
+        ]);
 
         foreach ($rows as $row) {
+            $id      = $row['id'];
+            $service = '['.$id.'] :'.$row['service'];
+
             // check frequency came
             if ($check && $row['frequency']) {
                 if (is_numeric($row['frequency'])) {
                     if (($row['lastrun'] + $row['frequency']) > time()) {
-                        $this->output('Time not reached for service id:'.$row['id'], $row['service']);
+                        $this->output('Time not reached for service id:'.$id, $service);
                         continue;
                     }
                 }
             }
-
-            $id      = $row['id'];
-            $service = $row['service'];
 
             $meta              = json_decode($row['meta_value'], true);
             $meta['userid']    = $row['fkuserid'];
@@ -109,7 +108,7 @@ class Transfer extends Helper
             $list   = ($meta['list']) ? 'database' : 'fly';
 
             if ($check && !$this->isTimeCame($meta['frequency'])) {
-                $this->output('Time not come for service id:'.$row['id'], $row['service']);
+                $this->output('Time not come for service id:'.$row['id'], $service);
                 continue;
             }
 
@@ -127,11 +126,10 @@ class Transfer extends Helper
                 ['id'      => $id]
             );
 
-            $managers = [];
-
             // add source adapter
             $config   = json_decode($source['config'], true);
             $adapter1 = strtolower($source['adapter']);
+            $manager  = null;
 
             try {
                 $manager = $this->getManager($adapter1, $config, $meta, 'source');
@@ -139,6 +137,8 @@ class Transfer extends Helper
                 $this->output('Unable to connect to Adapter '.$adapter1.' e:'.$e->getMessage(), $service);
                 continue;
             }
+
+            $managers = [];
 
             if ($manager) {
                 $adapter1            = $adapter1.'s';
@@ -154,6 +154,7 @@ class Transfer extends Helper
             if ($dest['adapter']) {
                 $config   = json_decode($dest['config'], true);
                 $adapter2 = strtolower($dest['adapter']);
+                $manager  = null;
 
                 try {
                     $manager = $this->getManager($adapter2, $config, $meta, 'dest');
@@ -193,159 +194,55 @@ class Transfer extends Helper
             }
 
             $this->output('Reading contents from '.$list, $service);
-            $contents = $this->listContents($manager, $adapter1, $id, $list, $ids, $meta);
+
+            try {
+                $contents = $this->listContents($manager, $adapter1, $id, $list, $ids, $meta);
+            } catch (Exception $e) {
+                $this->output('Unable to list content from Adapter '.$adapter1.' e:'.$e->getMessage(), $service);
+            }
 
             if (empty($contents)) {
                 $this->output('Contents not found', $service);
                 continue;
             }
 
-            if (in_array($action, ['get', 'put'])) {
-                foreach ($contents as $key => $entry) {
-                    if ($entry['type'] != 'file' || empty($entry['basename'])) {
-                        continue;
-                    }
-
-                    $basename = $entry['basename'];
-                    $name     = $entry['name'];
-
-                    // Find file exists in source
-                    if (!$manager->has($adapter1.$basename)) {
-                        unset($contents[$key]);
-                        $this->output($basename.' not found :'.$adapter1, $service);
-                        continue;
-                    }
-
-                    if ($manager->has($adapter2.$name)) {
-                        if (!empty($meta['overwrite'])) {
-                            $this->output($name.' already exists (delete)'.$adapter2, $service);
-                            $manager->delete($adapter2.$name);
-                        } else {
-                            unset($contents[$key]);
-                            $this->output($name.' already exists:'.$adapter2, $service);
-                            continue;
-                        }
-                    }
-
-                    $manager->writeStream($adapter2.$name,
-                        $manager->readStream($adapter1.$basename)
-                    );
-
-                    $this->output($basename.' '.$action.':: from:'.$adapter1.$basename.' to:'.$adapter2.$name, $service);
-
-                    if (!empty($meta['process'])) {
-                        $save                   = [];
-                        $save['fkuserid']       = $row['fkuserid'];
-                        $save['fk_transfer_id'] = $id;
-                        $save['service']        = $row['service'];
-                        $save['created']        = time();
-                        $save['basename']       = $name;
-                        $save['transfer_files'] = json_encode($entry);
-                        $save['meta_value']     = json_encode($entry['meta']);
-                        $save['status']         = 2;
-
-                        $this->database->save('#__transport_process', $save);
-                    }
-
-                    if (!empty($meta['events'])) {
-                        if (is_array($meta['events'])) {
-                            $meta['events'] = explode(',', $meta['events']);
-                        }
-                        foreach ($meta['events'] as $event) {
-                            $eventHelper = $this->get('resolver')->helper($event);
-                            $eventHelper->run($entry, $row);
-                        }
-                    }
-
-                    //delete from source
-                    if (!empty($meta['delete'])) {
-                        $manager->delete($adapter1.$basename);
-                        $this->output($basename.' deleted:'.$adapter1, $service);
-                    }
-
-                    //rename in source
-                    if (!empty($meta['rename'])) {
-                        $manager->rename($adapter1.$basename, $basename.'.rd');
-                        $this->output($basename.' renamed:'.$adapter1, $service);
-                    }
-                }
-            }
-
             if ($action == 'delete') {
-                // delete from source
-                foreach ($contents as $key => $entry) {
-                    if (!$manager->has($adapter1.$entry['basename'])) {
-                        unset($contents[$key]);
-                        $this->output($entry['basename'].' not found:'.$adapter1, $service);
-                        continue;
-                    }
-
-                    $manager->delete($adapter1.$entry['basename']);
-                    $this->output($entry['basename'].' deleted:'.$adapter1, $service);
-                }
-
-                if ($adapter2) {
-                    //delete from destination
-                    foreach ($contents as $key => $entry) {
-                        if (!$manager->has($adapter2.$entry['name'])) {
-                            unset($contents[$key]);
-                            $this->output($entry['name'].' not found:'.$adapter2, $service);
-                            continue;
-                        }
-
-                        $manager->delete($adapter2.$entry['name']);
-                        $this->output($entry['name'].' deleted:'.$adapter2, $service);
-                    }
-                }
+                $eids = $this->deleteAction($manager, $adapter1, $adapter2, $contents, $row);
             }
 
             if ($action == 'rename') {
-                // Rename source
-                foreach ($contents as $key => $entry) {
-                    if (!$manager->has($adapter1.$entry['basename'])) {
-                        unset($contents[$key]);
-                        $this->output($entry['basename'].' not found:'.$adapter1, $service);
-                        continue;
-                    }
+                $eids = $this->renameAction($manager, $adapter1, $adapter2, $contents, $row);
+            }
 
-                    $manager->rename($adapter1.$entry['basename'], $entry['basename'].'.rd');
-                    $this->output($entry['basename'].' renamed:'.$adapter1, $service);
-                }
-
-                if ($adapter2) {
-                    //rename destination
-                    foreach ($contents as $key => $entry) {
-                        if (!$manager->has($adapter2.$entry['name'])) {
-                            unset($contents[$key]);
-                            $this->output($entry['name'].' not found:'.$adapter2, $service);
-                            continue;
-                        }
-
-                        $manager->rename($adapter2.$entry['name'], $entry['name'].'.rd');
-                        $this->output($entry['name'].' renamed:'.$adapter2, $service);
-                    }
-                }
+            if (in_array($action, ['get', 'put'])) {
+                $eids = $this->getOrPutAction($manager, $adapter1, $adapter2, $contents, $row, $meta, $action, $service);
             }
 
             if ($list == 'database') {
-                $id = [];
-                foreach ($contents as $value) {
-                    if ($value['id']) {
-                        $id[] = $value['id'];
-                    }
-                }
-
-                if (!empty($id)) {
+                if (!empty($eids)) {
                     $this->database->update('#__transport_process',
                         ['status' => 1, 'modified' => time()],
-                        ['id'     => $id]
+                        ['id'     => $eids]
+                    );
+                }
+
+                // update the increments
+                $eids = [];
+                foreach ($contents as $content) {
+                    $eids[] = $content['id'];
+                }
+
+                if (!empty($eids)) {
+                    $this->database->update('#__transport_process',
+                        ['attempt = attempt + 1'],
+                        ['id' => $eids]
                     );
                 }
             }
         }
     }
 
-    private function listContents($manager, $adapter = null, $id = null, $list = null, $ids = null, $meta = [])
+    private function listContents(&$manager, $adapter = null, $id = null, $list = null, $ids = null, &$meta = [])
     {
         if ($list == 'database') {
             $conditions   = [];
@@ -371,8 +268,9 @@ class Transfer extends Helper
                         'id'       => $row['id'],
                         'type'     => 'file',
                         'basename' => $file,
+                        'path'     => $file,
                         'name'     => $name,
-                        'meta'     => json_decode($row['meta_value']),
+                        'meta'     => json_decode($row['meta_value'], true),
                     ];
                 }
             }
@@ -380,13 +278,24 @@ class Transfer extends Helper
             return $contents;
         }
 
-        $contents = $manager->listContents($adapter);
+        $pattern   = $meta['pattern'] ? '/'.trim($meta['pattern'], '/').'/' : '';
+        $recursive = ($meta['recursive']) ? true : false;
+        $contents  = $manager->listContents($adapter, $recursive);
 
+        $results = [];
         foreach ($contents as &$row) {
+            if (!empty($pattern)) {
+                $basename = $row['basename'];
+                if (!preg_match($pattern, $basename)) {
+                    $this->output($basename.' file not matched pattern ['.$pattern.']');
+                    continue;
+                }
+            }
             $row['name'] = $this->nameFormat($row['basename'], $meta);
+            $results[]   = $row;
         }
 
-        return $contents;
+        return $results;
     }
 
     /**
@@ -397,7 +306,7 @@ class Transfer extends Helper
      *
      * @return [type] [description]
      */
-    private function getManager($adapter, $config = [], $meta = [], $type = null)
+    private function getManager($adapter, $config = [], &$meta = [], $type = null)
     {
         $config['root'] = isset($config['root']) ? $config['root'] : '/';
 
@@ -424,25 +333,53 @@ class Transfer extends Helper
 
         switch ($adapter) {
             case 'ftp':
-                return new Filesystem(new Ftp($config));
-            break;
+                try {
+                    $ftp = new Ftp($config);
+                    $ftp->connect();
+                } catch (Exception $e) {
+                    $this->output('Unable to connect to Adapter '.$adapter.' e:'.$e->getMessage());
+
+                    return false;
+                }
+
+                return new Filesystem($ftp);
+                break;
             case 'sftp':
-                return new Filesystem(new Sftp($config));
-            break;
+                try {
+                    $sftp = new Sftp($config);
+                    $sftp->connect();
+                } catch (Exception $e) {
+                    $this->output('Unable to connect to Adapter '.$adapter.' e:'.$e->getMessage());
+
+                    return false;
+                }
+
+                return new Filesystem($sftp);
+                break;
 
             case 's3':
             case 'aws':
+                try {
+                    $client = S3Client::factory([
+                        'key'    => $config['key'],
+                        'secret' => $config['secret'],
+                        'region' => $config['region'],
+                    ]);
+                } catch (Exception $e) {
+                    $this->output('Unable to connect to Adapter '.$adapter.' e:'.$e->getMessage());
 
-                $client = S3Client::factory([
-                    'key'    => $config['key'],
-                    'secret' => $config['secret'],
-                    'region' => $config['region'],
-                ]);
+                    return false;
+                }
 
-                return new Filesystem(
-                    new AwsS3($client, $config['bucket'], $config['root'])
-                );
+                try {
+                    $s3 = new AwsS3($client, $config['bucket'], $config['root']);
+                } catch (Exception $e) {
+                    $this->output('Unable to connect to Adapter '.$adapter.' e:'.$e->getMessage());
 
+                    return false;
+                }
+
+                return new Filesystem($s3);
                 break;
             case 'local':
                 return new Filesystem(
@@ -508,7 +445,7 @@ class Transfer extends Helper
         return false;
     }
 
-    private function nameFormat($file, $meta = [])
+    private function nameFormat($file, &$meta = [])
     {
         $format = $meta['format'];
 
@@ -533,9 +470,234 @@ class Transfer extends Helper
     {
         $message = $message.' '.$append;
         if ($this->debug) {
-            echo $message.' '.$append."\n";
+            echo '['.date('d M').'] '.$message."\n";
         }
 
-        Log::write('transport', $message);
+        $this->get('loger')->info($message);
+    }
+
+    protected function getOrPutAction(&$manager, $adapter1, $adapter2, $contents, $row, $meta, $action, $service)
+    {
+        $service = '['.$row['id'].'] :'.$row['service'];
+
+        $eids = [];
+        if (in_array($action, ['get', 'put'])) {
+            foreach ($contents as $entry) {
+                if ($entry['type'] != 'file' || empty($entry['basename'])) {
+                    continue;
+                }
+
+                $basename = $entry['path'];
+                $name     = $entry['name'];
+                $key      = $entry['id'];
+                $pattern  = $meta['pattern'];
+
+                if (!empty($pattern)) {
+                    $pattern = '/'.trim($pattern, '/').'/';
+                    if (!preg_match($pattern, $basename)) {
+                        $this->output($basename.' file not matched pattern ['.$pattern.'] :'.$adapter1, $service);
+                        continue;
+                    }
+                }
+
+                // Find file exists in source
+                if (!$manager->has($adapter1.$basename)) {
+                    $this->output($basename.' file not found :'.$adapter1, $service);
+                    continue;
+                }
+
+                if ($manager->has($adapter2.$name)) {
+                    if (!empty($meta['overwrite'])) {
+                        $this->output($name.' already exists (delete)'.$adapter2, $service);
+                        $manager->delete($adapter2.$name);
+                    } else {
+                        $this->output($name.' already exists:'.$adapter2, $service);
+                        continue;
+                    }
+                }
+
+                try {
+                    $manager->writeStream($adapter2.$name,
+                        $manager->readStream($adapter1.$basename)
+                    );
+                } catch (Exception $e) {
+                    $this->output($name.' unable to '.$action.' e:'.$e->getMessage(), $service);
+                    continue;
+                }
+
+                $eids[] = $key;
+                $this->output($basename.' '.$action.': from:'.$adapter1.$basename.' to:'.$adapter2.$name, $service);
+
+                if (!empty($meta['process'])) {
+                    $save                   = [];
+                    $save['fkuserid']       = $row['fkuserid'];
+                    $save['fk_transfer_id'] = $row['id'];
+                    $save['service']        = $row['service'];
+                    $save['created']        = time();
+                    $save['basename']       = $name;
+                    $save['transfer_files'] = json_encode($entry);
+                    $save['meta_value']     = json_encode(['entry' => $entry['meta'], 'row' => $meta]);
+                    $save['status']         = 2;
+
+                    $this->database->save('#__transport_process', $save);
+                }
+
+                $events = $meta['events'];
+                if (!is_array($events)) {
+                    $events = explode(',', $events);
+                }
+
+                if (is_array($events) && !empty($events)) {
+                    foreach ($events as $event) {
+                        if (empty($event)) {
+                            continue;
+                        }
+
+                        try {
+                            $eventHelper = $this->application->helper($event);
+                        } catch (Exception $e) {
+                            $this->output($event.' event not found. e:'.$e->getMessage(), $service);
+                            continue;
+                        }
+
+                        if (method_exists($eventHelper, 'run')) {
+                            $eventHelper->run($entry, $row);
+                        } elseif (method_exists($eventHelper, 'execute')) {
+                            $eventHelper->execute($entry, $row);
+                        } else {
+                            $this->output($event.' has no run($entry, $row) method.', $service);
+                            continue;
+                        }
+                    }
+                }
+
+                //delete from source
+                if (!empty($meta['delete'])) {
+                    try {
+                        $manager->delete($adapter1.$basename);
+                    } catch (Exception $e) {
+                        $this->output($basename.' unable to delete e:'.$e->getMessage(), $service);
+                        continue;
+                    }
+
+                    $this->output($basename.' deleted:'.$adapter1, $service);
+                }
+
+                //rename in source
+                if (!empty($meta['rename'])) {
+                    try {
+                        $manager->rename($adapter1.$basename, $basename.'.rd');
+                    } catch (Exception $e) {
+                        $this->output($basename.' unable to rename e:'.$e->getMessage(), $service);
+                        continue;
+                    }
+
+                    $this->output($basename.' renamed:'.$adapter1, $service);
+                }
+            }
+        }
+
+        return $eids;
+    }
+
+    protected function renameAction(&$manager, $adapter1, $adapter2, $contents = [], $row = [])
+    {
+        $service = '['.$row['id'].'] :'.$row['service'];
+        $action  = 'rename';
+
+        $eids = [];
+        // Rename source
+        foreach ($contents as $key => $entry) {
+            $basename = $entry['basename'];
+
+            if (!$manager->has($adapter1.$basename)) {
+                $this->output($basename.' not found to '.$action.':'.$adapter1, $service);
+                continue;
+            }
+
+            try {
+                $manager->rename($adapter1.$basename, $basename.'.rd');
+            } catch (Exception $e) {
+                $this->output($entry['basename'].' unable to '.$action.' e:'.$e->getMessage(), $service);
+                continue;
+            }
+
+            $this->output($basename.' renamed:'.$adapter1, $service);
+
+            $eids[] = $key;
+        }
+
+        if ($adapter2) {
+            //rename destination
+            foreach ($contents as $key => $entry) {
+                $basename = $entry['name'];
+                if (!$manager->has($adapter2.$basename)) {
+                    $this->output($basename.' not found to '.$action.':'.$adapter2, $service);
+                    continue;
+                }
+
+                try {
+                    $manager->rename($adapter2.$basename, $basename.'.rd');
+                } catch (Exception $e) {
+                    $this->output($basename.' unable to '.$action.' e:'.$e->getMessage(), $service);
+                    continue;
+                }
+
+                $this->output($basename.' renamed:'.$adapter2, $service);
+
+                $eids[] = $key;
+            }
+        }
+
+        return $eids;
+    }
+
+    protected function deleteAction(&$manager, $adapter1, $adapter2, $contents = [], $row = [])
+    {
+        $service = '['.$row['id'].'] :'.$row['service'];
+        $action  = 'delete';
+        $eids    = [];
+        // delete from source
+        foreach ($contents as $key => $entry) {
+            $basename = $entry['basename'];
+
+            if (!$manager->has($adapter1.$basename)) {
+                $this->output($basename.' not found to '.$action.':'.$adapter1, $service);
+                continue;
+            }
+
+            try {
+                $manager->delete($adapter1.$basename);
+            } catch (Exception $e) {
+                $this->output($basename.' unable to '.$action.' e:'.$e->getMessage(), $service);
+                continue;
+            }
+
+            $this->output($basename.' deleted:'.$adapter1, $service);
+
+            $eids[] = $key;
+        }
+
+        if ($adapter2) {
+            //delete from destination
+            foreach ($contents as $key => $entry) {
+                $basename = $entry['name'];
+                if (!$manager->has($adapter2.$basename)) {
+                    $this->output($basename.' not found to '.$action.':'.$adapter2, $service);
+                    continue;
+                }
+
+                try {
+                    $manager->delete($adapter2.$basename);
+                } catch (Exception $e) {
+                    $this->output($basename.' unable to '.$action.' e:'.$e->getMessage(), $service);
+                    continue;
+                }
+
+                $this->output($basename.' deleted:'.$adapter2, $service);
+
+                $eids[] = $key;
+            }
+        }
     }
 }

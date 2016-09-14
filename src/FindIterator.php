@@ -19,7 +19,7 @@ class Finditerator implements \Iterator
     private $position       = 0;
     private $total_position = 0;
     private $next_token     = null;
-    private $result_batch   = null;
+    private $results        = null;
     private $query          = '';
     private $database       = null;
     private $ok             = true;
@@ -60,7 +60,7 @@ class Finditerator implements \Iterator
             $this->query['type'],
             $this->query
         );
-        $this->result_batch = $rows;
+        $this->results = $rows;
 
         $this->page += 1;
         $this->position   = 0;
@@ -82,7 +82,7 @@ class Finditerator implements \Iterator
 
     public function current()
     {
-        return $this->result_batch[$this->position];
+        return $this->results[$this->position];
     }
 
     public function key()
@@ -94,22 +94,17 @@ class Finditerator implements \Iterator
     {
         $this->position += 1;
         $this->total_position += 1;
-        if (!isset($this->result_batch[$this->position]) && $this->next_token) {
+        if (!isset($this->results[$this->position]) && $this->next_token) {
             $this->query();
         }
     }
 
-    public function next_valid()
-    {
-        return isset($this->result_batch[$this->position + 1]) or $this->next_token;
-    }
-
     public function valid()
     {
-        if (!$this->result_batch or !is_array($this->result_batch)) {
+        if (!$this->results || !is_array($this->results)) {
             return false;
         }
 
-        return isset($this->result_batch[$this->position]);
+        return isset($this->results[$this->position]);
     }
 }

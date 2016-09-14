@@ -12,7 +12,6 @@
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper as BaseHelper;
-use Speedwork\Util\Utility;
 
 /**
  * @author Sankar <sankar.suda@gmail.com>
@@ -23,7 +22,7 @@ class Update extends BaseHelper
 
     public function beforeRun()
     {
-        $tables = config('database.tables');
+        $tables = $this->config('database.tables');
 
         $this->tables = array_merge($tables['default'], $tables['update']);
     }
@@ -31,8 +30,6 @@ class Update extends BaseHelper
     public function beforeUpdate(&$query = [], $details = [])
     {
         $userid = $this->get('userid');
-
-        //$query['fields'] = Utility::stripTags($query['fields']);
 
         if ($details['ignore'] === true || empty($userid)) {
             return true;
