@@ -19,24 +19,23 @@ use Speedwork\Util\Utility;
  */
 class Menu extends Helper
 {
-    public function buildMenu($parent, $menuData, $optional = [], $ul = true, $nohideParent = true)
+    public function buildMenu($parent, $menu, $options = [], $ul = true, $nohideParent = true)
     {
         $html = '';
-        $hide = ($optional['hideChild'] && !$nohideParent) ? true : false;
+        $hide = ($options['hideChild'] && !$nohideParent) ? true : false;
 
-        if (isset($menuData['parents'][$parent])) {
+        if (isset($menu['parents'][$parent])) {
             $html .= ($ul) ? '<ul '.($hide ? ' style="display:none"' : 'class="nav navbar-nav navbar-left"').'>' : '';
             $i     = 1;
-            $total = count($menuData['parents'][$parent]);
+            $total = count($menu['parents'][$parent]);
 
-            foreach ($menuData['parents'][$parent] as $itemId) {
-                $data = $menuData['items'][$itemId];
+            foreach ($menu['parents'][$parent] as $itemId) {
+                $data = $menu['items'][$itemId];
 
                 $property = $this->createMenu($data);
+                $access   = $this->hasPermission($property['link']);
 
-                $access = $this->hasPermission($property['link']);
-
-                if (!isset($menuData['parents'][$itemId])) {
+                if (!isset($menu['parents'][$itemId])) {
                     if (!$access) {
                         continue;
                     }
@@ -51,13 +50,13 @@ class Menu extends Helper
                     }
                 }
 
-                if (isset($menuData['parents'][$itemId])) {
+                if (isset($menu['parents'][$itemId])) {
                     if ($access) {
                         $html .= "<li data-tag='b'".$property['lattr'].' '.(($access) ? '' : 'no-permisson').'>';
                         $html .= '<a '.$property['attr'].'><i '.$property['iattr'].'></i><span>'.$property['name'].'</span></a>';
                     }
 
-                    $html .= self::buildMenu($itemId, $menuData, $optional, $access, false);
+                    $html .= self::buildMenu($itemId, $menu, $options, $access, false);
 
                     if ($access) {
                         $html .= '</li>';
@@ -74,9 +73,9 @@ class Menu extends Helper
 
     public function display($menu_type)
     {
-        $menuData = $this->getMenuDetails($menu_type);
+        $menu = $this->getMenuDetails($menu_type);
 
-        return $this->build(0, $menuData);
+        return $this->build(0, $menu);
     }
 
     protected function build($parent = 0, $rows = [])
@@ -88,8 +87,7 @@ class Menu extends Helper
                 $data = $rows['items'][$id];
 
                 $property = $this->createMenu($data, true);
-
-                $access = $this->hasPermission($property['link']);
+                $access   = $this->hasPermission($property['link']);
 
                 if (!isset($rows['parents'][$id])) {
                     if (!$access) {
@@ -155,6 +153,24 @@ class Menu extends Helper
             }
         }
 
+        $attrib = [];
+        if (!$detail) {
+            $attrib = [
+                'href'  => $link,
+                'title' => Utility::specialchars($name),
+            ];
+        }
+
+        $property         = $this->parseAttr($attributes, $attrib, $detail);
+        $property['link'] = ($attributes['link']) ? $attributes['link'] : $url;
+        $property['name'] = $name;
+        $property['url']  = $link;
+
+        return $property;
+    }
+
+    protected function parseAttr($attributes = [], $attrib = [], $detail = false)
+    {
         $liattr = [];
         foreach ($attributes as $k => $v) {
             if (strpos($k, 'l:') !== false) {
@@ -173,20 +189,14 @@ class Menu extends Helper
             }
         }
 
+        $property = [];
         if (!$detail) {
-            $attrib = ['href' => $link];
-
-            $attributes          = array_merge($attrib, $attributes);
-            $attributes['title'] = Utility::specialchars($name);
-
+            $attributes        = array_merge($attrib, $attributes);
             $property['lattr'] = Utility::parseAttributes($liattr);
             $property['attr']  = Utility::parseAttributes($attributes);
         }
 
         $property['iattr'] = Utility::parseAttributes($iattr);
-        $property['link']  = ($attributes['link']) ? $attributes['link'] : $url;
-        $property['name']  = $name;
-        $property['url']   = $link;
 
         return $property;
     }
@@ -214,44 +224,44 @@ class Menu extends Helper
         ]);
 
         // Create a multidimensional array to conatin a list of items and parents
-        $menuData = [
+        $menu = [
             'items'   => [],
             'parents' => [],
         ];
         // Builds the array lists with data from the menu table
         foreach ($result as $menuItem) {
-            // Creates entry into items array with current menu item id ie. $menuData['items'][1]
-            $menuData['items'][$menuItem['menu_id']] = $menuItem;
+            // Creates entry into items array with current menu item id ie. $menu['items'][1]
+            $menu['items'][$menuItem['menu_id']] = $menuItem;
             // Creates entry into parents array. Parents array contains a list of all items with children
-            $menuData['parents'][$menuItem['parent_id']][] = $menuItem['menu_id'];
+            $menu['parents'][$menuItem['parent_id']][] = $menuItem['menu_id'];
         }
 
-        return $menuData;
+        return $menu;
     }
 
     public function displayMenu($menu_type, $parents = false, $hideChild = true)
     {
-        $menuData = $this->getMenuDetails($menu_type, $parents);
+        $menu = $this->getMenuDetails($menu_type, $parents);
 
         $options = [];
 
         $options['hideChild'] = $hideChild;
 
-        return self::buildMenu(0, $menuData, $options, true);
+        return self::buildMenu(0, $menu, $options, true);
     }
 
     // Menu builder function, parentId 0 is the root
-    public function buildMenuSelect($parent, $menuData, $selected, $select_parents, $type, $level = 0)
+    public function buildMenuSelect($parent, $menu, $selected, $select_parents, $type, $level = 0)
     {
         $sel = explode(',', $selected);
 
         $html = '';
-        if (isset($menuData['parents'][$parent])) {
+        if (isset($menu['parents'][$parent])) {
             $html .= '<ul>';
-            foreach ($menuData['parents'][$parent] as $itemId) {
+            foreach ($menu['parents'][$parent] as $itemId) {
                 $input = true;
 
-                $data       = $menuData['items'][$itemId];
+                $data       = $menu['items'][$itemId];
                 $name       = $data['name'];
                 $input_type = ($type == 0) ? 'checkbox' : 'radio';
 
@@ -267,17 +277,17 @@ class Menu extends Helper
                     $template = '<input type="'.$input_type.'" disabled="disabled" />';
                 }
 
-                if (!isset($menuData['parents'][$itemId])) {
+                if (!isset($menu['parents'][$itemId])) {
                     $html .= '<li><label>';
                     $html .= $template.$name.'</label>';
                     $html .= '</li>';
                 }
-                if (isset($menuData['parents'][$itemId])) {
+                if (isset($menu['parents'][$itemId])) {
                     ++$level;
 
                     $html .= '<li><label for="'.$level.'">';
                     $html .= $template.$name.'</label>';
-                    $html .= self::buildMenuSelect($itemId, $menuData, $selected, $select_parents, $type, $level);
+                    $html .= self::buildMenuSelect($itemId, $menu, $selected, $select_parents, $type, $level);
                     $html .= '</li>';
                 }
             }
@@ -311,19 +321,19 @@ class Menu extends Helper
         ]);
 
         // Create a multidimensional array to conatin a list of items and parents
-        $menuData = [
+        $menu = [
             'items'   => [],
             'parents' => [],
         ];
         // Builds the array lists with data from the menu table
         foreach ($result as $menuItem) {
-            // Creates entry into items array with current menu item id ie. $menuData['items'][1]
-            $menuData['items'][$menuItem['menu_id']] = $menuItem;
+            // Creates entry into items array with current menu item id ie. $menu['items'][1]
+            $menu['items'][$menuItem['menu_id']] = $menuItem;
             // Creates entry into parents array. Parents array contains a list of all items with children
-            $menuData['parents'][$menuItem['parent_id']][] = $menuItem['menu_id'];
+            $menu['parents'][$menuItem['parent_id']][] = $menuItem['menu_id'];
         }
 
-        $menu = self::buildMenuSelect(0, $menuData, $selected, $select_parents, $type);
+        $menu = self::buildMenuSelect(0, $menu, $selected, $select_parents, $type);
 
         return $menu;
     }
@@ -370,40 +380,40 @@ class Menu extends Helper
                 'conditions' => ['menu_id' => $cats],
             ]);
 
-            $menuData = [
+            $menu = [
                 'items'   => [],
                 'parents' => [],
             ];
             foreach ($menus as $menu) {
-                $menuData['items'][$menu['menu_id']]       = $menu;
-                $menuData['parents'][$menu['parent_id']][] = $menu['menu_id'];
+                $menu['items'][$menu['menu_id']]       = $menu;
+                $menu['parents'][$menu['parent_id']][] = $menu['menu_id'];
             }
 
-            $categoriesurl = $this->renderCategoires($menuData);
+            $categoriesurl = $this->renderCategoires($menu);
         }
 
         return $categoriesurl;
     }
 
-    public function renderCategoires($menuData = [], $parent = 0)
+    public function renderCategoires($menu = [], $parent = 0)
     {
         $categories = [];
 
-        if (isset($menuData['parents'][$parent])) {
-            foreach ($menuData['parents'][$parent] as $menuid) {
-                $data = $menuData['items'][$menuid];
+        if (isset($menu['parents'][$parent])) {
+            foreach ($menu['parents'][$parent] as $menuid) {
+                $data = $menu['items'][$menuid];
 
                 $link = $this->parselink($data);
                 if (!$this->hasPermission($link)) {
                     continue;
                 }
 
-                if (!isset($menuData['parents'][$menuid])) {
+                if (!isset($menu['parents'][$menuid])) {
                     $categories[] = '<a href="'.$link.'">'.$data['name'].'</a>';
                 }
-                if (isset($menuData['parents'][$menuid])) {
+                if (isset($menu['parents'][$menuid])) {
                     $categories[] = '<a href="'.$link.'">'.$data['name'].'</a>';
-                    $ca           = $this->renderCategoires($menuData, $menuid);
+                    $ca           = $this->renderCategoires($menu, $menuid);
                     $categories   = array_merge($categories, $ca);
                 }
 
@@ -413,7 +423,7 @@ class Menu extends Helper
             }
         }
 
-        return    $categories;
+        return $categories;
     }
 
     public function menuIDToParents($id, $implode = ' &raquo; ')

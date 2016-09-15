@@ -14,8 +14,6 @@ namespace Speedwork\Helpers;
 use PHPMailer as BaseMailer;
 
 /**
- * @vendor "phpmailer/phpmailer": "~5.2"
- *
  * @author Sankar <sankar.suda@gmail.com>
  */
 class PHPMailer
@@ -27,17 +25,17 @@ class PHPMailer
 
         if ($smtp) {
             $mail->IsSMTP();                 // set mailer to use SMTP
-            $mail->Host     = $config['mail_host'];  // specify main and backup server
+            $mail->Host     = $config['host'];  // specify main and backup server
             $mail->SMTPAuth = true;     // turn on SMTP authentication
-            $mail->Port     = $config['mail_port'];     // Mail server port
-            $mail->Username = $config['mail_user'];  // SMTP username
-            $mail->Password = $config['mail_pass']; // SMTP password
+            $mail->Port     = $config['port'];     // Mail server port
+            $mail->Username = $config['username'];  // SMTP username
+            $mail->Password = $config['password']; // SMTP password
         } else {
             $mail->IsMail();
         }
 
-        $mail->From     = $data['from_email'];
-        $mail->FromName = $data['from_name'];
+        $mail->From     = $data['from']['email'];
+        $mail->FromName = $data['from']['name'];
         $mail->IsHTML(true);
         $mail->Subject = $data['subject'];
 

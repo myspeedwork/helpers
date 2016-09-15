@@ -699,5 +699,7 @@ class Transfer extends Helper
                 $eids[] = $key;
             }
         }
+
+        return $eids;
     }
 }

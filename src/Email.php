@@ -18,6 +18,8 @@ use Speedwork\Core\Helper;
  */
 class Email extends Helper
 {
+    protected $config = [];
+
     public function send($data = [])
     {
         return $this->sendEmail($data);
@@ -25,42 +27,86 @@ class Email extends Helper
 
     public function sendEmail($data = [])
     {
-        $sent  = false;
-        $merge = [];
-
+        $sent         = false;
         $name         = strtolower($data['template']);
         $name         = str_replace(['.tpl', '.html', '.txt'], '', $name);
         $data['name'] = $name;
 
-        if (!is_array($data['config'])) {
-            $config = $this->config('mail');
-        } else {
-            $config = $data['config'];
+        $this->config = $this->config('mail');
+        if (is_array($data['config'])) {
+            $this->config = array_merge($this->config, $data['config']);
         }
 
+        $details         = $this->getEmailContent($data);
+        $data['subject'] = $details['subject'];
+        $data['text']    = $details['text'];
+        $data['html']    = $details['html'];
+
+        $data['from']        = $this->setFromHeaders($data, $name);
+        $data['to']          = $this->formatMailId($data['to']);
+        $data['cc']          = $this->formatMailId($data['cc']);
+        $data['bcc']         = $this->formatMailId($data['bcc']);
+        $data['replay']      = $this->formatMailId($data['replay'], false);
+        $data['attachments'] = $this->formatAttachments($data['attachments']);
+
+        //if disable
+        if (!$this->config['enable']) {
+            $data['reason'] = 'Mail sending disabled';
+            $this->logMail($data, false);
+
+            return true;
+        }
+
+        if (empty($data['to'])) {
+            $data['reason'] = 'No valid email address';
+            $this->logMail($data, false);
+
+            return true;
+        }
+
+        $provider = ($this->config['provider']) ? $this->config['provider'] : 'PHPMailer';
+
+        $mail     = $this->get('resolver')->helper($provider);
+        $provider = strtolower($provider);
+        $sent     = $mail->send($data, $this->config[$provider]);
+
+        $status = $sent['status'];
+
+        if (!$status) {
+            $data['reason'] = $sent['message'];
+        }
+
+        $this->logMail($data, $status);
+
+        if ($status) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function setFromHeaders($data = [], $name = null)
+    {
         //over write mail from per perticular template if avalable
-        $email_from = $config['email_from'];
-        if ($email_from && is_array($email_from)) {
-            if ($email_from[$name]) {
-                $data['from_email'] = $email_from[$name][0];
-                $data['from_name']  = $email_from[$name][1];
-            }
-        }
-
-        if (is_array($config['from'])) {
-            $config['from_name']  = $config['from']['name'];
-            $config['from_email'] = $config['from']['email'];
+        $from = $this->config['email_from'];
+        if ($from && is_array($from) && isset($from[$name])) {
+            return [
+                'email' => $from[$name][0],
+                'name'  => $from[$name][1],
+            ];
         }
 
         if (is_array($data['from'])) {
-            $data['from_name']  = $data['from']['name'];
-            $data['from_email'] = $data['from']['email'];
+            return $data['from'];
         }
 
-        $data['from_name']  = (empty($data['from_name'])) ? $config['from_name'] : $data['from_name'];
-        $data['from_email'] = (empty($data['from_email'])) ? $config['from_email'] : $data['from_email'];
+        if (is_array($this->config['from'])) {
+            return $this->config['from'];
+        }
+    }
 
-        $data = array_merge($merge, $data);
+    protected function getEmailContent($data = [])
+    {
         $tags = (is_array($data['tags'])) ? $data['tags'] : [];
 
         if (!empty($data['template'])) {
@@ -95,49 +141,14 @@ class Email extends Helper
             $data['text'] = $data['html'];
         }
 
-        $data['to']          = $this->formatMailId($data['to']);
-        $data['cc']          = $this->formatMailId($data['cc']);
-        $data['bcc']         = $this->formatMailId($data['bcc']);
-        $data['replay']      = $this->formatMailId($data['replay'], false);
-        $data['attachments'] = $this->formatAttachments($data['attachments']);
-
-        //if disable
-        if (!$config['enable']) {
-            $data['reason'] = 'Mail sending disabled';
-            $this->logMail($data, false);
-
-            return true;
-        }
-
-        if (empty($data['to'])) {
-            $data['reason'] = 'No valid email address';
-            $this->logMail($data, false);
-
-            return true;
-        }
-
-        $provider = ($config['provider']) ? $config['provider'] : 'PHPMailer';
-
-        $mail     = $this->get('resolver')->helper($provider);
-        $provider = strtolower($provider);
-        $sent     = $mail->send($data, $config[$provider]);
-
-        $status = $sent['status'];
-
-        if (!$status) {
-            $data['reason'] = $sent['message'];
-        }
-
-        $this->logMail($data, $status);
-
-        if ($status) {
-            return true;
-        }
-
-        return false;
+        return [
+            'subject' => $data['subject'],
+            'text'    => $data['text'],
+            'html'    => $data['html'],
+        ];
     }
 
-    private function formatMailId($id, $blacklist = true)
+    protected function formatMailId($id, $blacklist = true)
     {
         if (empty($id)) {
             return [];
@@ -185,18 +196,16 @@ class Email extends Helper
             $list[$value['email']] = $value;
         }
 
-        unset($id, $ids);
-
-        $config = $this->config('mail');
-
-        if ($config['blacklist'] && $blacklist) {
+        if ($this->config['blacklist'] && $blacklist) {
             $list = $this->checkBlackList($list);
         }
+
+        unset($id, $ids);
 
         return $list;
     }
 
-    private function checkBlackList($emails = [])
+    protected function checkBlackList($emails = [])
     {
         if (empty($emails)) {
             return $emails;
@@ -205,8 +214,7 @@ class Email extends Helper
         $rows = $this->database->find('#__addon_email_blacklist', 'all', [
             'conditions' => ['email' => $emails],
             'fields'     => ['email'],
-            ]
-        );
+        ]);
 
         $blacklist = [];
         foreach ($rows as $row) {
@@ -222,7 +230,7 @@ class Email extends Helper
         return $emails;
     }
 
-    private function formatAttachments($attachments = [])
+    protected function formatAttachments($attachments = [])
     {
         if (!is_array($attachments)) {
             return [];
@@ -243,7 +251,7 @@ class Email extends Helper
         return $att;
     }
 
-    public function getContent($data = [], $tags = [])
+    protected function getContent($data = [], $tags = [])
     {
         $return = [];
         // insert template
@@ -286,7 +294,7 @@ class Email extends Helper
         return $return;
     }
 
-    public function replace($vars = [], $html = null)
+    protected function replace($vars = [], $html = null)
     {
         if (preg_match_all('~\{\$([^{}]+)\}~', $html, $matches) && count($matches[0]) > 0) {
             foreach ($matches[0] as $key => $match) {
@@ -297,7 +305,7 @@ class Email extends Helper
         return $html;
     }
 
-    public function find($string, $vars)
+    protected function find($string, $vars)
     {
         $str = explode('.', $string);
         foreach ($str as $key) {
@@ -307,7 +315,7 @@ class Email extends Helper
         return $vars;
     }
 
-    public function logMail($data = [], $status = true)
+    protected function logMail($data = [], $status = true)
     {
         //log enable
         if (!$this->config('mail.log') || $data['log'] === false) {
@@ -335,7 +343,7 @@ class Email extends Helper
         $this->database->save('#__addon_email_logs', $save);
     }
 
-    private function cleanUrl($url)
+    protected function cleanUrl($url)
     {
         $is_ssl = $this->config('app.ssl');
         $prefix = ($is_ssl) ? 'https://' : 'http://';

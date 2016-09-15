@@ -132,8 +132,7 @@ class Speed extends Helper
         $row = $this->database->find($tbl, 'first', [
             'fields'     => ['MAX(ordering) as morder'],
             'conditions' => $where,
-            ]
-        );
+        ]);
 
         $maxord = $row['morder'];
 
@@ -146,8 +145,7 @@ class Speed extends Helper
             'order'      => ['ordering'],
             'conditions' => $where,
             'fields'     => [$field, 'ordering'],
-            ]
-        );
+        ]);
 
         // compact the ordering numbers
         $i = 0;

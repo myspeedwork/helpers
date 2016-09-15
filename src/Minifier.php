@@ -16,6 +16,8 @@ namespace Speedwork\Helpers;
  */
 class Minifier
 {
+    protected $compress = false;
+
     public function cdnify($files)
     {
         $cdn = STATICD.'cdn.json';
@@ -45,8 +47,9 @@ class Minifier
     {
         $list = [];
         foreach ($files as $src => $attr) {
-            $ext             = strtolower(strrchr($src, '.'));
-            $ext             = explode('?', $ext);
+            $ext = strtolower(strrchr($src, '.'));
+            $ext = explode('?', $ext);
+
             $list[$ext[0]][] = $src;
         }
 
@@ -54,7 +57,7 @@ class Minifier
         foreach ($list as $ext => $files) {
             // Send Etag hash
             $hash = md5(implode(',', $files));
-           // Try the cache first to see if the minifyd files were already generated
+           // Try the cache first to see if the minified files were already generated
             $cachefile = 'cache-'.$hash.$ext;
             $cacheurl  = _STATIC.$cachefile;
             $dir       = STATICD.$cachefile;
@@ -72,7 +75,9 @@ class Minifier
                     $content .= ';';
                 }
 
-                //$content = $this->compress($content);
+                if ($this->compress) {
+                    $content = $this->compress($content);
+                }
 
                 $fp = fopen($dir, 'wb');
                 fwrite($fp, $content);
@@ -127,7 +132,9 @@ class Minifier
                     $url = $path.'/';
                 }
 
-                if (substr($file, 0, 1) != '/' && substr($file, 0, 5) != 'http:' && substr($file, 0, 6) != 'https:') {
+                if (substr($file, 0, 1) != '/'
+                    && substr($file, 0, 5) != 'http:'
+                    && substr($file, 0, 6) != 'https:') {
                     $absolute_path = $url.ltrim($file, '.');
                     $content       = str_replace($find, 'url('.$absolute_path.')', $content);
                 }
