@@ -26,7 +26,6 @@ class Router extends Helper
     public $short   = false;
     public $router  = false;
     public $seo     = false;
-    public $is_ssl  = false;
     public $domains = null;
 
     public function index()
@@ -58,10 +57,6 @@ class Router extends Helper
 
         if ($this->router) {
             $this->routes = $config['router']['routes'];
-        }
-
-        if (env('HTTPS') == 'on' || env('HTTPS') == '1') {
-            $this->is_ssl = true;
         }
 
         if (($route == 'index.html' || $route == 'index.php'
@@ -191,32 +186,25 @@ class Router extends Helper
             '*',
         ];
 
-        $url = null;
         if (!preg_match('/(http|https):\/\//', $link)
             && substr($link, 0, 2) != '//'
         ) {
             // Domain change requests
-            $url  = $this->forwardDomain($matches);
-            $link = $url.$link;
+            $url = $this->forwardDomain($matches, $url);
         }
 
+        $link = $url.$link;
         //check is component is required ssl
-        $ssl = false;
         if ($this->ssl[$k] || $this->ssl[$option.':*']) {
-            $ssl = true;
-        }
-        if (($ssl === true || $this->is_ssl === true) && $url) {
             $link = str_replace('http://', 'https://', $link);
         }
 
         return $link;
     }
 
-    protected function forwardDomain($matches = [])
+    protected function forwardDomain($matches, $url)
     {
         $checked = false;
-        $url     = null;
-
         if ($this->domains === null) {
             $siteid  = $this->config('app.siteid');
             $forward = $this->config('router.forward');

@@ -21,7 +21,7 @@ class Metainfo extends Helper
 {
     public function index()
     {
-        $config = config('app.metainfo');
+        $config = $this->config('app.metainfo');
 
         if (!is_array($config)) {
             return false;
@@ -31,8 +31,8 @@ class Metainfo extends Helper
             return false;
         }
 
-        $option    = $this->get('option');
-        $view      = $this->get('view');
+        list($option, $view) = explode('.', $this->get('route'));
+
         $component = null;
 
         $matches = [
@@ -42,53 +42,69 @@ class Metainfo extends Helper
         ];
 
         $component  = $option.':'.$view;
-        $components = $config['components'];
+        $components = $config['config'];
 
+        $uniqids = [];
         foreach ($matches as $match) {
-            $uniqid = $components[$match];
-            if ($uniqid) {
+            $uniqids = $components[$match];
+            if ($uniqids) {
                 $component = $match;
                 break;
             }
         }
 
-        $id  = $this->get[$uniqid];
-        $id  = ($id) ? $id : '';
-        $row = $this->getMetainfo($id, $component);
+        $ids = [];
+        foreach ($uniqids as $uniqid) {
+            $ids[] = $this->data[$uniqid] ?: '';
+        }
+
+        $row = $this->getMetainfo($ids, $component);
 
         if ($row['title']) {
-            $this->get('template')->setTitle($row['title']);
-            $this->get('template')->setMetaData('og:title', $row['title'], 'property');
-            $this->get('template')->setMetaData('twitter:title', $row['title'], 'property');
-            config(['app.title' => $row['title']]);
+            $this->get('template')->setMeta('title', $row['title']);
+            $this->get('template')->setMeta('og:title', $row['title'], 'property');
+            $this->get('template')->setMeta('twitter:title', $row['title'], 'property');
+            config(['app.meta.title' => $row['title']]);
         }
 
         if ($row['keywords']) {
-            $this->get('template')->setKeywords($row['keywords']);
+            $this->get('template')->setMeta('keywords', $row['keywords']);
         }
 
         if ($row['descn']) {
-            $this->get('template')->setDescription($row['descn']);
-            $this->get('template')->setMetaData('og:description', $row['descn'], 'property');
-            $this->get('template')->setMetaData('twitter:description', $row['descn'], 'property');
+            $this->get('template')->setMeta('description', $row['descn']);
+            $this->get('template')->setMeta('og:description', $row['descn'], 'property');
+            $this->get('template')->setMeta('twitter:description', $row['descn'], 'property');
         }
 
         if ($row['canonical']) {
-            $this->get('template')->addHeadLink($this->link($row['canonical']), 'canonical');
+            $this->get('template')->addLinkTag($this->link($row['canonical']), 'canonical');
         }
 
         $metas = json_decode($row['meta'], true);
         if (is_array($metas)) {
             foreach ($metas as $meta) {
-                $this->get('template')->setMetaData($meta['name'], $meta['content'], $meta['type']);
+                $this->get('template')->setMeta($meta['name'], $meta['content'], $meta['type']);
             }
         }
     }
 
+    /**
+     * Get meta information.
+     *
+     * @param string $uniqid Uniqid to get meta
+     * @param string $option Identifier
+     *
+     * @return array Meta info
+     */
     public function getMetainfo($uniqid = '', $option = '')
     {
         return $this->database->find('#__addon_metainfo', 'first', [
-            'conditions' => ['uniqid' => $uniqid, 'component' => $option, 'status' => 1],
+            'conditions' => [
+                'uniqid'    => $uniqid,
+                'component' => $option,
+                'status'    => 1,
+            ],
         ]);
     }
 
