@@ -11,7 +11,9 @@
 
 namespace Speedwork\Helpers;
 
+use Exception;
 use PHPMailer as BaseMailer;
+use phpmailerException;
 
 /**
  * @author Sankar <sankar.suda@gmail.com>
@@ -30,6 +32,12 @@ class PHPMailer
             $mail->Port     = $config['port'];     // Mail server port
             $mail->Username = $config['username'];  // SMTP username
             $mail->Password = $config['password']; // SMTP password
+            if ($config['secure']) {
+                $mail->SMTPSecure = 'tls';
+                if (is_array($config['secure'])) {
+                    $mail->SMTPOptions = $config['secure'];
+                }
+            }
         } else {
             $mail->IsMail();
         }
@@ -72,7 +80,13 @@ class PHPMailer
             $mail->AddAttachment($value['content']);
         }
 
-        $sent = $mail->Send();
+        try {
+            $sent = $mail->Send();
+        } catch (phpmailerException $e) {
+            $error = $e->errorMessage(); //Pretty error messages from PHPMailer
+        } catch (Exception $e) {
+            $error = $e->getMessage(); //Boring error messages from anything else!
+        }
 
         // Clear all addresses and attachments for next mail
         $mail->ClearAddresses();
@@ -80,7 +94,7 @@ class PHPMailer
 
         return [
             'status'  => $sent,
-            'message' => $mail->ErrorInfo,
+            'message' => $error,
         ];
     }
 }

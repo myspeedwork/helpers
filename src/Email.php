@@ -11,6 +11,7 @@
 
 namespace Speedwork\Helpers;
 
+use Exception;
 use Speedwork\Core\Helper;
 
 /**
@@ -64,11 +65,20 @@ class Email extends Helper
             return true;
         }
 
-        $provider = ($this->config['provider']) ? $this->config['provider'] : 'PHPMailer';
+        $provider  = $this->config['provider'] ?: 'php';
+        $providers = $this->config['providers'];
+        $config    = $providers[$provider];
+        $config    = array_merge(['from' => $data['from']], $config);
+        $driver    = $config['driver'];
 
-        $mail     = $this->get('resolver')->helper($provider);
-        $provider = strtolower($provider);
-        $sent     = $mail->send($data, $this->config[$provider]);
+        try {
+            $mail = $this->get('resolver')->helper($driver);
+            $sent = $mail->send($data, $config);
+        } catch (Exception $e) {
+            $sent            = [];
+            $sent['status']  = 'FAILED';
+            $sent['message'] = $e->getMessage();
+        }
 
         $status = $sent['status'];
 
@@ -125,7 +135,7 @@ class Email extends Helper
                 if (preg_match('~<!--subject:([^>]+)-->~', $data['text'], $matches)) {
                     $data['subject'] = $matches[1];
                 } else {
-                    $data['subject'] = _SITENAME;
+                    $data['subject'] = $this->config('app.name');
                 }
             }
         } elseif (!empty($tags)) {
@@ -255,22 +265,24 @@ class Email extends Helper
     {
         $return = [];
         // insert template
-        $email_replace = $this->config('email.replace');
+        $email_replace = $this->config['replace'];
         $array_content = (is_array($email_replace)) ? $email_replace : [];
 
-        $array_content['sitename']    = _SITENAME;
-        $array_content['admin_email'] = _ADMIN_MAIL;
-        $array_content['siteurl']     = $this->cleanUrl(_URL);
-        $array_content['email_url']   = $this->cleanUrl(_IMAGES.'email/en/');
+        $locale = $this->config['locale'] ?: 'en';
+
+        $array_content['sitename']    = $this->config('app.name');
+        $array_content['admin_email'] = $this->config('app.email');
+        $array_content['siteurl']     = $this->config('app.url');
+        $array_content['email_url']   = path('email', true).$locale.'/';
 
         $tags = array_merge($tags, $array_content);
-        $path = UPLOAD.'email'.DS.'en'.DS;
+        $path = path('email').$locale.DS;
 
         $filename = $data['template'];
         $filename = str_replace('.html', '.tpl', $filename);
         $filename = $path.$filename;
 
-        $theme    = $this->config('email.theme');
+        $theme    = $this->config['theme'];
         $theme    = ($theme) ? $theme : 'emailer.tpl';
         $theme    = $data['theme'] ?: $theme;
         $template = $path.$theme;
@@ -341,22 +353,5 @@ class Email extends Helper
         $save['status']     = ($status) ? 1 : 0;
 
         $this->database->save('#__addon_email_logs', $save);
-    }
-
-    protected function cleanUrl($url)
-    {
-        $is_ssl = $this->config('app.ssl');
-        $prefix = ($is_ssl) ? 'https://' : 'http://';
-
-        $short = substr($url, 0, 2);
-        if ($short == '//') {
-            $url = $prefix.ltrim($url, '//');
-        }
-
-        if (!preg_match('/^(http|https):/', $url)) {
-            $url = $prefix.$url;
-        }
-
-        return $url;
     }
 }

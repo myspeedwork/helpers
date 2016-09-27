@@ -114,8 +114,7 @@ class Events extends Helper
         $attempt_id = $this->get('session')->get('attempt_id');
 
         if ($attempt_id) {
-            $this->database->delete(
-                '#__user_login_attempts',
+            $this->database->delete('#__user_login_attempts',
                 ['OR' => ['username' => $event['user']['username'], 'ip_address' => ip()]]
             );
 
@@ -123,7 +122,7 @@ class Events extends Helper
         }
 
         // Check is fake login
-        if ($this->view == 'auth') {
+        if ($this->get('route') == 'members.auth') {
             return true;
         }
 

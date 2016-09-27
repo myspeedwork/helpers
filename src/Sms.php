@@ -11,6 +11,7 @@
 
 namespace Speedwork\Helpers;
 
+use Exception;
 use Speedwork\Core\Helper;
 
 /**
@@ -60,7 +61,7 @@ class Sms extends Helper
             return true;
         }
 
-        $provider = ($config['provider']) ? $config['provider'] : $data['provider'];
+        $config['provider'] = $data['provider'] ?: $config['provider'];
 
         if (empty($config['provider'])) {
             $data['reason'] = 'Provider not found';
@@ -69,10 +70,20 @@ class Sms extends Helper
             return true;
         }
 
-        $sms      = $this->get('resolver')->helper($provider);
-        $provider = strtolower($provider);
+        $provider  = $config['provider'];
+        $providers = $config['providers'];
+        $config    = $providers[$provider];
+        $config    = array_merge(['from' => $data['from']], $config);
+        $driver    = $config['driver'];
 
-        $sent = $sms->send($data, $config[$provider]);
+        try {
+            $sms  = $this->get('resolver')->helper($driver);
+            $sent = $sms->send($data, $config);
+        } catch (Exception $e) {
+            $sent            = [];
+            $sent['status']  = 'FAILED';
+            $sent['message'] = $e->getMessage();
+        }
 
         $status = $sent['status'];
 
@@ -83,7 +94,7 @@ class Sms extends Helper
         $this->logSms($data, $status);
 
         if ($status) {
-            return 'true';
+            return true;
         }
 
         return false;
@@ -117,8 +128,7 @@ class Sms extends Helper
         $blacklist = $this->database->find('#__addon_sms_blacklist', 'list', [
             'conditions' => ['mobile' => $mobiles],
             'fields'     => ['mobile'],
-            ]
-        );
+        ]);
 
         return array_diff($mobiles, $blacklist);
     }
@@ -126,7 +136,7 @@ class Sms extends Helper
     public function getContent($filename)
     {
         $message = null;
-        $path    = UPLOAD.'email'.DS.'en'.DS;
+        $path    = path('email').'en'.DS;
 
         $filename = $path.$filename;
 

@@ -479,11 +479,9 @@ class Menu extends Helper
 
         if ($parse['query']) {
             parse_str($parse['query'], $parse);
-            $option = $parse['option'];
-            $view   = $parse['view'];
-            $task   = $parse['task'];
+            $rule = $parse['option'].'.'.$parse['view'].'.'.$parse['task'];
 
-            if ($option && !$this->acl->isAllowed($option, $view, $task)) {
+            if ($parse['option'] && !$this->get('acl')->isAllowed($rule)) {
                 return false;
             }
         }
