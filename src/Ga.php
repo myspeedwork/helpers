@@ -33,7 +33,7 @@ class Ga extends Helper
 
         $header .= "ga('create', '".$account."', 'auto');ga('send', 'pageview');";
 
-        $this->template->addScriptDeclaration($header);
+        $this->get('assets')->addScriptDeclaration($header);
     }
 
     public function eventPush($category, $action, $label, $value = 1)
@@ -45,7 +45,7 @@ class Ga extends Helper
         $code = 'if (typeof _gaq != \'undefined\') {
                     _gaq.push(["_trackEvent", "'.$category.'","'.$action.'","'.$label.'","'.$value.'"]);
                 }';
-        $this->template->addScriptDeclaration($code);
+        $this->get('assets')->addScriptDeclaration($code);
     }
 
     public function eventAdd($action, $label, $value)
@@ -56,6 +56,6 @@ class Ga extends Helper
         $code = 'if (typeof _gaq != \'undefined\') {
                     _gaq.push(["_trackEvent","'.$action.'","'.$label.'","'.$value.'"]);
                 }';
-        $this->template->addScriptDeclaration($code);
+        $this->get('assets')->addScriptDeclaration($code);
     }
 }

@@ -13,14 +13,13 @@ namespace Speedwork\Helpers;
 
 use DeviceDetector\DeviceDetector;
 use DeviceDetector\Parser\Device\DeviceParserAbstract;
-use Speedwork\Core\Helper;
 
 /**
  * @vendor "piwik/device-detector": "dev-master",
  *
  * @author sankar <sankar.suda@gmail.com>
  */
-class Device extends Helper
+class Device
 {
     public function get($advanced = false)
     {

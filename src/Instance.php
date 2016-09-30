@@ -14,8 +14,6 @@ namespace Speedwork\Helpers;
 /**
  * Helper to check instance already running base on key.
  *
- * @since  0.0.1
- *
  * @author sankar <sankar.suda@gmail.com>
  */
 class Instance

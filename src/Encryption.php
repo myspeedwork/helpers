@@ -11,12 +11,10 @@
 
 namespace Speedwork\Helpers;
 
-use Speedwork\Core\Helper;
-
 /**
  * @author sankar <sankar.suda@gmail.com>
  */
-class Encryption extends Helper
+class Encryption
 {
     public function encrypt($value)
     {
