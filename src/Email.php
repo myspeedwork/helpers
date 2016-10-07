@@ -343,8 +343,10 @@ class Email extends Helper
             $to = $data['to'];
         }
 
+        $from = $data['from']['email'];
+
         $save               = [];
-        $save['from_email'] = $data['from_email'];
+        $save['from_email'] = $from;
         $save['to_email']   = implode(', ', $to);
         $save['subject']    = $data['subject'];
         $save['message']    = $data['text'];
