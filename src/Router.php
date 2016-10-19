@@ -33,8 +33,8 @@ class Router extends Helper
         BaseRouter::addRewrite($this);
 
         $link  = [];
-        $route = $this->get['route'];
-        $short = $this->get['short'];
+        $route = $this->query('route');
+        $short = $this->query('short');
 
         if ($short) {
             $router = $this->get('resolver')->helper('router.txtly');
@@ -106,12 +106,7 @@ class Router extends Helper
         $values = parse_url($url, PHP_URL_QUERY);
         parse_str($values, $values);
 
-        foreach ($values as $key => $val) {
-            $_REQUEST[$key]   = $val;
-            $_GET[$key]       = $val;
-            $this->data[$key] = $val;
-            $this->get[$key]  = $val;
-        }
+        $this->get('request')->addInput($values);
 
         return $values;
     }

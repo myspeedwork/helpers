@@ -11,22 +11,26 @@
 
 namespace Speedwork\Helpers;
 
+use Speedwork\Core\Helper;
+
 /**
  * @author sankar <sankar.suda@gmail.com>
  */
-class Encryption
+class Encryption extends Helper
 {
     public function encrypt($value)
     {
-        $value = base64_encode($value);
+        $crypt = $this->getHelper('crypt');
+        $crypt->start('tripledes');
 
-        return rtrim($value, '=');
+        return $crypt->encrypt($value);
     }
 
     public function decrypt($value)
     {
-        $value = $value.str_repeat('=', strlen($value) % 4);
+        $crypt = $this->getHelper('crypt');
+        $crypt->start('tripledes');
 
-        return base64_decode($value);
+        return trim($crypt->decrypt($value), "\0");
     }
 }

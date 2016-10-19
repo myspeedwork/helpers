@@ -50,10 +50,10 @@ class Crypt extends Helper
         $this->algorithm = $algorithm;
 
         if (empty($key)) {
-            $this->key = config('app.key');
-        } else {
-            $this->key = $key;
+            $key = $this->config('app.key');
         }
+
+        $this->key = substr($key, 24);
 
         $this->openModule();
         $this->createInitVector();
