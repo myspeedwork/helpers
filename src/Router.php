@@ -12,166 +12,108 @@
 namespace Speedwork\Helpers;
 
 use Speedwork\Core\Helper;
-use Speedwork\Core\Router as BaseRouter;
-use Speedwork\Util\Str;
 
 /**
  * @author sankar <sankar.suda@gmail.com>
  */
 class Router extends Helper
 {
-    public $_config = [];
-    public $routes  = [];
-    public $ssl     = [];
-    public $short   = false;
-    public $router  = false;
-    public $seo     = false;
-    public $domains = null;
+    protected $routes  = null;
+    protected $ssl     = null;
+    protected $short   = null;
+    protected $seo     = null;
+    protected $domains = null;
 
-    public function index()
+    /**
+     * Setup the router configuration.
+     */
+    protected function setup()
     {
-        BaseRouter::addRewrite($this);
+        $config = $this->config('router');
 
-        $link  = [];
-        $route = $this->query('route');
-        $short = $this->query('short');
-
-        if ($short) {
-            $router = $this->get('resolver')->helper('router.txtly');
-            $res    = $router->route($short);
-            if ($res === true) {
-                return true;
-            }
-
-            $link['url'] = $res;
-        }
-
-        $config       = $this->config('router');
         $this->short  = $config['short']['enable'];
-        $this->router = $config['router']['enable'];
-        $this->seo    = $config['seo']['enable'];
+        $this->routes = $config['router']['enable'];
+        $this->ssl    = $config['ssl']['enable'];
+        $this->seo    = $config['seo'];
+
+        if ($this->ssl) {
+            $this->ssl = $config['ssl']['config'];
+        }
 
         if ($this->short) {
-            $this->_config = $config['short']['config'];
+            $this->short = $config['short']['config'];
         }
 
-        if ($this->router) {
+        if ($this->routes) {
             $this->routes = $config['router']['routes'];
         }
-
-        if (($route == 'index.html' || $route == 'index.php'
-            || empty($route)) && empty($link)
-        ) {
-            return false;
-        }
-
-        $link = $this->generateUrl($route, $link);
-        if (empty($link)) {
-            return false;
-        }
-
-        return $this->processUrl($link);
     }
 
     /**
-     * Route the link based on error code and url.
+     * Route the incoming url to process controller.
      *
-     * @param array $link Url and error ocode
-     *
-     * @return array Parsed url options
+     * @return array|bool
      */
-    protected function processUrl($link = [])
+    public function route($link = [])
     {
-        $type = $link['type'];
-        $url  = $link['url'];
+        $this->setUp();
 
-        if (empty($url)) {
-            $url = 'index.php?option=errors';
-        }
+        $route = $this->query('route');
 
-        if ($type == '301') {
-            //Permanent (301)
-            header('HTTP/1.1 301 Moved Permanently');
-            header('Location:'.$url);
-
+        if (($route == 'index.html'
+            || $route == 'index.php'
+            || empty($route))
+        ) {
             return true;
         }
 
-        if ($type == '302') {
-            header('Location: '.$url);
-
-            return true;
-        }
-
-        $values = parse_url($url, PHP_URL_QUERY);
-        parse_str($values, $values);
-
-        $this->get('request')->addInput($values);
-
-        return $values;
+        return $this->parseRoute($route, $link);
     }
 
-    protected function generateUrl($route, $link = [])
+    /**
+     * Parse the route with different sources.
+     *
+     * @param string $route
+     * @param array  $link
+     *
+     * @return array
+     */
+    protected function parseRoute($route, $link = [])
     {
-        if (empty($link['url']) && $this->router) {
-            $link = ['url' => $this->route($route)];
-        }
-
+        // Check whether it's matches to Short Url
         if (empty($link['url']) && $this->short) {
-            $link = $this->getUrl($route);
+            $link = $this->getShortUrl($route);
         }
 
+        // Check whether it matches to routes config
+        if (empty($link['url']) && $this->routes) {
+            $link = ['url' => $this->getRouterUrl($route)];
+        }
+
+        // Check whether it's matches to Normal seo
         if (empty($link['url']) && $this->seo) {
-            $link = ['url' => $this->getSeoNormal($route)];
+            $link = ['url' => $this->getSeoUrl($route)];
         }
 
         return $link;
     }
 
+    /**
+     * Rewrite the give link.
+     *
+     * @param string $link
+     * @param string $url
+     *
+     * @return string
+     */
     public function rewrite($link, $url)
     {
-        $parts  = $this->parseQuery($link);
+        $parts  = $this->parseLink($link);
         $option = $parts['option'];
         $view   = $parts['view'];
 
         if (empty($option)) {
             return $url.$link;
-        }
-
-        $k   = $option.':'.$view;
-        $uri = null;
-
-        if ($this->short) {
-            //for short
-            $key    = $this->_config[$k];
-            $uniqid = $key['uniqid'];
-            if ($uniqid == '') {
-                $key    = $this->_config[$option.':*'];
-                $uniqid = $key['uniqid'];
-            }
-
-            if ($uniqid) {
-                $id       = $parts[$uniqid];
-                $id       = ($id == 'none') ? '' : $id;
-                $shorturl = $this->setUrl(['option' => $k, 'uniqid' => $id]);
-
-                if ($shorturl) {
-                    $uri = $shorturl;
-                }
-            }
-        }
-
-        //if not found short url check router
-        if ($this->router && empty($uri)) {
-            $uri = $this->setRouter($link);
-        }
-
-        if ($this->seo && empty($uri)) {
-            $uri = $this->setSeoNormal($parts);
-        }
-
-        if (!empty($uri)) {
-            $link = $uri;
         }
 
         $matches = [
@@ -181,6 +123,25 @@ class Router extends Helper
             '*',
         ];
 
+        $uri = null;
+
+        if (empty($uri) && $this->short) {
+            $uri = $this->setShortUrl($matches, $parts);
+        }
+
+        //if not found short url check router
+        if (empty($uri) && $this->routes) {
+            $uri = $this->setRouterUrl($link);
+        }
+
+        if (empty($uri) && $this->seo) {
+            $uri = $this->setSeoUrl($parts);
+        }
+
+        if (!empty($uri)) {
+            $link = $uri;
+        }
+
         if (!preg_match('/(http|https):\/\//', $link)
             && substr($link, 0, 2) != '//'
         ) {
@@ -189,14 +150,26 @@ class Router extends Helper
         }
 
         $link = $url.$link;
-        //check is component is required ssl
-        if ($this->ssl[$k] || $this->ssl[$option.':*']) {
-            $link = str_replace('http://', 'https://', $link);
+
+        if ($this->ssl) {
+            foreach ($matches as $match) {
+                if ($this->ssl[$match]) {
+                    $link = str_replace('http://', 'https://', $link);
+                }
+            }
         }
 
         return $link;
     }
 
+    /**
+     * Change the domain name to other domain.
+     *
+     * @param array  $matches
+     * @param string $url
+     *
+     * @return string Modified Url
+     */
     protected function forwardDomain($matches, $url)
     {
         $checked = false;
@@ -231,141 +204,28 @@ class Router extends Helper
         return $url;
     }
 
-    public function setUrl($options = [])
-    {
-        $option = $options['option'];
-        $uniqid = $options['uniqid'];
-
-        if (!$option) {
-            return false;
-        }
-
-        $data = $this->database->find('#__addon_shorturls', 'first', [
-            'fields'     => ['short_url'],
-            'conditions' => [
-                'status'    => 1,
-                'component' => $option,
-                'uniqid'    => $uniqid,
-            ],
-        ]);
-
-        return $data['short_url'];
-    }
-
-    public function getUrl($shorturl)
-    {
-        if (!$shorturl) {
-            return false;
-        }
-
-        $data = $this->database->find('#__addon_shorturls', 'first', [
-            'fields'     => ['original_url', 'redirect'],
-            'conditions' => ['OR' => ['short_url' => $shorturl, 'id' => $shorturl], 'status' => 1],
-        ]);
-
-        return ['url' => $data['original_url'], 'type' => $data['redirect']];
-    }
-
-    public function save($save = [], $conditions = [])
-    {
-        //sanitize short url
-        $parts             = $this->parseQuery($save['original_url']);
-        $save['component'] = $parts['component'];
-        $save['view']      = $parts['view'];
-
-        $save['component'] = str_replace('com_', '', $save['component']);
-
-        if (empty($save['uniqid'])) {
-            //get config
-            $conf   = $this->config('router.short.generate');
-            $k      = $save['component'].':'.$save['view'];
-            $key    = $conf[$k];
-            $uniqid = $key['uniqid'];
-            if ($uniqid == '') {
-                $key    = $conf[$save['component'].':*'];
-                $uniqid = $key['uniqid'];
-            }
-            $save['uniqid'] = $parts[$uniqid];
-        }
-
-        if (empty($save['component']) || empty($save['short_url'])) {
-            return false;
-        }
-
-        $save['short_url'] = Str::slug($save['short_url']);
-
-        self::checkShortUrl($save);
-
-        $id = $save['id'];
-        unset($save['id']);
-
-        $save['component'] = $save['option'].':'.$save['view'];
-        unset($save['view']);
-
-        if (count($conditions) > 0) {
-            $conditions['component'] = $save['component'];
-
-            $row = $this->database->find('#__addon_shorturls', 'first', [
-                'conditions' => $conditions,
-            ]);
-
-            $id = $row['id'];
-        }
-
-        if ($id) {
-            return $this->database->update('#__addon_shorturls', $save, ['id' => $id]);
-        } else {
-            $save['created'] = time();
-
-            return $this->database->save('#__addon_shorturls', $save);
-        }
-    }
-
-    public function isKeyExists($save = [])
-    {
-        $row = $this->database->find('#__addon_shorturls', 'first', [
-            'conditions' => ['short_url' => $save['shorturl']],
-        ]);
-
-        if (!isset($row['id']) || $save['id'] == $row['id']) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public function checkShortUrl($save = [])
-    {
-        if ($this->isKeyExists($save)) {
-            $shorturl          = $save['short_url'];
-            $lastdigit         = strrchr($shorturl, '-');
-            $lastdigit         = (int) trim($lastdigit, '-');
-            $adddigit          = $lastdigit + 1;
-            $shorturl          = $shorturl.'-'.$adddigit;
-            $save['short_url'] = $shorturl;
-
-            return $this->checkShortUrl($save);
-        }
-
-        return $save;
-    }
-
-    /* SEO BASED ON ROUTER*/
-    public function route($uri)
+    /**
+     * Get the url based on configured routes.
+     *
+     * @param string $route Route to check
+     *
+     * @return string|bool
+     */
+    public function getRouterUrl($route)
     {
         // Is there a literal match?  If so we're done
-        if (isset($this->routes[$uri])) {
-            return $this->routes[$uri];
+        if (isset($this->routes[$route])) {
+            return $this->routes[$route];
         }
         // Loop through the route array looking for wild-cards
         foreach ($this->routes as $key => $val) {
             // Convert wild-cards to RegEx
             $key = str_replace([':any', ':num'], ['.+', '[0-9]+'], $key);
             // Does the RegEx match?
-            if (preg_match('#^'.$key.'$#', $uri)) {
+            if (preg_match('#^'.$key.'$#', $route)) {
                 // Do we have a back-reference?
                 if (strpos($val, '$') !== false && strpos($key, '(') !== false) {
-                    $val = preg_replace('#^'.$key.'$#', $val, $uri);
+                    $val = preg_replace('#^'.$key.'$#', $val, $route);
                 }
 
                 return $val;
@@ -375,7 +235,12 @@ class Router extends Helper
         return false;
     }
 
-    public function setRouter($uri)
+    /**
+     * Convert speedwork url to router url.
+     *
+     * @param string $uri
+     */
+    public function setRouterUrl($uri)
     {
         // $uri is expected to be a string, in the form of index.php?option=com&view=v
         // trim leading and trailing slashes, just in case
@@ -455,10 +320,12 @@ class Router extends Helper
         return false;
     }
 
-    /* SEO NORMAL
-    * replace only component and view
-    */
-    protected function setSeoNormal($parts)
+    /**
+     * Generate Seo Url from full url.
+     *
+     * @param array $parts
+     */
+    protected function setSeoUrl($parts)
     {
         $option = $parts['option'];
         if (empty($option)) {
@@ -469,36 +336,125 @@ class Router extends Helper
         unset($parts['option'], $parts['view']);
         $q = http_build_query($parts);
 
-        return $option.(($view) ? '/'.$view : '').(($q) ? '?'.$q : '');
+        $url = $option.(($view) ? '/'.$view : '').(($q) ? '?'.$q : '');
+
+        return $url;
     }
 
-    protected function getSeoNormal($url)
+    /**
+     * Generate Normal url from seo url based on route.
+     *
+     * @param string $route
+     *
+     * @return string
+     */
+    protected function getSeoUrl($route)
     {
-        $url  = explode('/', $url);
+        list($path, $query)  = explode('?', $route);
+        list($option, $view) = explode('/', $path);
+
         $link = 'index.php?';
 
-        if ($url[0]) {
-            $link .= 'option='.$url[0];
+        if ($option) {
+            $link .= 'option='.$option;
         }
 
-        if ($url[1]) {
-            $link .= '&view='.$url[1];
+        if ($view) {
+            $link .= '&view='.$view;
+        }
+
+        if ($query) {
+            $link .= '?'.$query;
         }
 
         return $link;
     }
 
-    protected function parseQuery($var)
+    /**
+     * Get the Short Url based on route.
+     *
+     * @param string $route
+     *
+     * @return bool|array
+     */
+    public function getShortUrl($route)
     {
-        $var = parse_url($var, PHP_URL_QUERY);
-        $var = explode('&', html_entity_decode($var));
+        if (!$route) {
+            return false;
+        }
+
+        $row = $this->get('database')->find('#__addon_shorturls', 'first', [
+            'fields'     => ['original_url', 'redirect'],
+            'conditions' => [
+                'OR' => [
+                    'short_url' => $route,
+                    'id'        => $route,
+                ],
+                'status' => 1,
+            ],
+        ]);
+
+        return [
+            'url'  => $row['original_url'],
+            'type' => $row['redirect'],
+        ];
+    }
+
+    /**
+     * Provide short url for given long url.
+     *
+     * @param array $matches Configuration should match
+     * @param array $parts   Url parts
+     */
+    protected function setShortUrl($matches = [], $parts = [])
+    {
+        $uri = null;
+
+        foreach ($matches as $match) {
+            $key    = $this->short[$match];
+            $uniqid = $key['uniqid'];
+
+            if ($uniqid) {
+                $id = $parts[$uniqid];
+                $id = ($id != 'none') ?: '';
+
+                $row = $this->get('database')->find('#__addon_shorturls', 'first', [
+                    'fields'     => ['short_url'],
+                    'conditions' => [
+                        'status' => 1,
+                        'option' => $match,
+                        'uniqid' => $id,
+                    ],
+                ]);
+
+                if ($row['short_url']) {
+                    $uri = $row['short_url'];
+                    break;
+                }
+            }
+        }
+
+        return $uri;
+    }
+
+    /**
+     * Convert given url to query parts.
+     *
+     * @param string $url
+     *
+     * @return array Url parts
+     */
+    protected function parseLink($url)
+    {
+        $url = parse_url($url, PHP_URL_QUERY);
+        $url = explode('&', html_entity_decode($url));
         $arr = [];
 
-        foreach ($var as $val) {
+        foreach ($url as $val) {
             $x          = explode('=', $val);
             $arr[$x[0]] = $x[1];
         }
-        unset($val, $x, $var);
+        unset($val, $x, $url);
 
         return $arr;
     }

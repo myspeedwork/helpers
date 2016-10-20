@@ -102,14 +102,15 @@ class Pdf extends Helper
             return false;
         }
 
-        $tags             = [];
-        $tags['sitename'] = _SITENAME;
-        $tags['siteurl']  = $this->cleanUrl(_URL);
-        $tags['imageurl'] = $this->cleanUrl(_IMAGES.'pdf_templates/');
+        $tags                = [];
+        $tags['sitename']    = $this->config('app.name');
+        $tags['admin_email'] = $this->config('app.email');
+        $tags['siteurl']     = $this->config('app.url');
+        $tags['imageurl']    = path('public', true).'pdf_templates/';
 
         $tags     = array_merge($data['tags'], $tags);
         $filename = $data['template'];
-        $path     = UPLOAD.'pdf_templates'.DS;
+        $path     = path('public').'pdf_templates'.DS;
 
         $filename = str_replace('.html', '.tpl', $filename);
         $filename = $path.$filename;
@@ -133,22 +134,5 @@ class Pdf extends Helper
     public function __call($function, $args)
     {
         call_user_func_array([$this->pdf->pdf, $function], $args);
-    }
-
-    private function cleanUrl($url)
-    {
-        $ssl    = config('app.ssl');
-        $prefix = ($ssl) ? 'https://' : 'http://';
-
-        $short = substr($url, 0, 2);
-        if ($short == '//') {
-            $url = $prefix.ltrim($url, '//');
-        }
-
-        if (!preg_match('/^(http|https):/', $url)) {
-            $url = $prefix.$url;
-        }
-
-        return $url;
     }
 }

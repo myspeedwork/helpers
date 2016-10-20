@@ -268,7 +268,7 @@ class Email extends Helper
         $email_replace = $this->config['replace'];
         $array_content = (is_array($email_replace)) ? $email_replace : [];
 
-        $locale = $this->config['locale'] ?: 'en';
+        $locale = $this->config['locale'] ?: $this->config('app.locale');
 
         $array_content['sitename']    = $this->config('app.name');
         $array_content['admin_email'] = $this->config('app.email');

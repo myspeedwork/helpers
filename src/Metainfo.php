@@ -64,7 +64,7 @@ class Metainfo extends Helper
             $this->get('template')->setMeta('title', $row['title']);
             $this->get('template')->setMeta('og:title', $row['title'], 'property');
             $this->get('template')->setMeta('twitter:title', $row['title'], 'property');
-            config(['app.meta.title' => $row['title']]);
+            $this->config(['app.meta.title' => $row['title']]);
         }
 
         if ($row['keywords']) {

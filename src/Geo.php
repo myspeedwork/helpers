@@ -11,9 +11,17 @@
 
 namespace Speedwork\Helpers;
 
+use Geocoder\Adapter\GeoIP2Adapter;
+use Geocoder\Provider\Chain;
+use Geocoder\Provider\FreeGeoIp;
+use Geocoder\Provider\GeoIP2;
+use Geocoder\Provider\GoogleMaps;
+use Geocoder\Provider\HostIp;
+use Geocoder\ProviderAggregator;
+use GeoIp2\Database\Reader;
+use Ivory\HttpAdapter\CurlHttpAdapter;
+
 /**
- * @vendor "geoip2/geoip2": "dev-master"
- *
  * @author sankar <sankar.suda@gmail.com>
  */
 class Geo
@@ -26,17 +34,17 @@ class Geo
 
         //http://ipinfo.io/119.63.142.37/json
 
-        $geocoder = new \Geocoder\ProviderAggregator();
-        $adapter  = new \Ivory\HttpAdapter\CurlHttpAdapter();
+        $geocoder = new ProviderAggregator();
+        $adapter  = new CurlHttpAdapter();
 
-        $reader        = new \GeoIp2\Database\Reader(STORAGE.'/'.$db);
-        $geoIP2Adapter = new \Geocoder\Adapter\GeoIP2Adapter($reader);
+        $reader        = new Reader(STORAGE.'/'.$db);
+        $geoIP2Adapter = new GeoIP2Adapter($reader);
 
-        $chain = new \Geocoder\Provider\Chain([
-            new \Geocoder\Provider\GeoIP2($geoIP2Adapter),
-            new \Geocoder\Provider\FreeGeoIp($adapter),
-            new \Geocoder\Provider\HostIp($adapter),
-            new \Geocoder\Provider\GoogleMaps($adapter),
+        $chain = new Chain([
+            new GeoIP2($geoIP2Adapter),
+            new FreeGeoIp($adapter),
+            new HostIp($adapter),
+            new GoogleMaps($adapter),
         ]);
 
         $geocoder->registerProvider($chain);

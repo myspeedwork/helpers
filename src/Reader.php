@@ -18,7 +18,6 @@ use EmptyIterator;
 use Guzzle\Iterator\ChunkedIterator;
 use Guzzle\Iterator\MapIterator;
 use LimitIterator;
-use Speedwork\Core\Helper;
 use SplFileObject;
 use Traversable;
 
@@ -27,7 +26,7 @@ use Traversable;
  *
  * @author sankar <sankar.suda@gmail.com>
  */
-class Reader extends Helper
+class Reader
 {
     public function fetchAll($reader, callable $callable = null, $options = [])
     {

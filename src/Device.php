@@ -12,7 +12,9 @@
 namespace Speedwork\Helpers;
 
 use DeviceDetector\DeviceDetector;
+use DeviceDetector\Parser\Client\Browser;
 use DeviceDetector\Parser\Device\DeviceParserAbstract;
+use DeviceDetector\Parser\OperatingSystem;
 
 /**
  * @vendor "piwik/device-detector": "dev-master",
@@ -66,12 +68,12 @@ class Device
         }
 
         //advanced params
-        $osFamily            = \DeviceDetector\Parser\OperatingSystem::getOsFamily($os['short_name']);
+        $osFamily            = OperatingSystem::getOsFamily($os['short_name']);
         $return['os_family'] = ($osFamily !== false) ? $osFamily : 'Unknown';
 
         $return['model'] = $detect->getModel();
 
-        $browserFamily            = \DeviceDetector\Parser\Client\Browser::getBrowserFamily($client['short_name']);
+        $browserFamily            = Browser::getBrowserFamily($client['short_name']);
         $return['browser_family'] = ($browserFamily !== false) ? $browserFamily : 'Unknown';
 
         $touch           = $detect->isTouchEnabled();
