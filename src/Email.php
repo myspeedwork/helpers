@@ -19,13 +19,32 @@ use Speedwork\Core\Helper;
  */
 class Email extends Helper
 {
+    /**
+     * Email configuration.
+     *
+     * @var array
+     */
     protected $config = [];
 
+    /**
+     * Alias method to sendEmail.
+     *
+     * @param array $data Mail Details
+     *
+     * @return bool
+     */
     public function send($data = [])
     {
         return $this->sendEmail($data);
     }
 
+    /**
+     * Send an email.
+     *
+     * @param array $data Email details
+     *
+     * @return boolen
+     */
     public function sendEmail($data = [])
     {
         $sent         = false;
@@ -38,7 +57,8 @@ class Email extends Helper
             $this->config = array_merge($this->config, $data['config']);
         }
 
-        $details         = $this->getEmailContent($data);
+        $details = $this->getEmailContent($data);
+
         $data['subject'] = $details['subject'];
         $data['text']    = $details['text'];
         $data['html']    = $details['html'];
@@ -95,10 +115,16 @@ class Email extends Helper
         return false;
     }
 
+    /**
+     * Format the from name and from email.
+     *
+     * @param array  $data Email details
+     * @param string $name Name of the template
+     */
     protected function setFromHeaders($data = [], $name = null)
     {
         //over write mail from per perticular template if avalable
-        $from = $this->config['email_from'];
+        $from = $this->config['mail_from'];
         if ($from && is_array($from) && isset($from[$name])) {
             return [
                 'email' => $from[$name][0],
@@ -124,11 +150,11 @@ class Email extends Helper
                 $tags['html'] = $this->replace($tags, $data['html']);
             }
 
-            $d = $this->getContent($data, $tags);
+            $content = $this->getContent($data, $tags);
 
-            $data['html'] = $d['html'];
-            $data['text'] = $d['text'];
-            unset($d);
+            $data['html'] = $content['html'];
+            $data['text'] = $content['text'];
+            unset($content);
 
             //if subject is empty, look into content for subject
             if (empty($data['subject'])) {
@@ -233,7 +259,7 @@ class Email extends Helper
 
         foreach ($emails as $key => $email) {
             if (isset($blacklist[$key])) {
-                unset($emails[$key]);
+                unset($emails[$key], $email);
             }
         }
 
@@ -261,6 +287,14 @@ class Email extends Helper
         return $att;
     }
 
+    /**
+     * Get the html mail body from template.
+     *
+     * @param array $data Email Details
+     * @param array $tags Replace tags
+     *
+     * @return array
+     */
     protected function getContent($data = [], $tags = [])
     {
         $return = [];
@@ -273,27 +307,24 @@ class Email extends Helper
         $array_content['sitename']    = $this->config('app.name');
         $array_content['admin_email'] = $this->config('app.email');
         $array_content['siteurl']     = $this->config('app.url');
-        $array_content['email_url']   = path('email', true).$locale.'/';
+        $array_content['email_url']   = $this->app->getPath('email', true).$locale.'/';
 
         $tags = array_merge($tags, $array_content);
-        $path = path('email').$locale.DS;
 
-        $filename = $data['template'];
-        $filename = str_replace('.html', '.tpl', $filename);
-        $filename = $path.$filename;
+        $template = $data['template'];
+        $template = $this->findTemplate($template, $locale);
 
-        $theme    = $this->config['theme'];
-        $theme    = ($theme) ? $theme : 'emailer.tpl';
-        $theme    = $data['theme'] ?: $theme;
-        $template = $path.$theme;
+        if ($template) {
+            $theme = $this->config['theme'];
+            $theme = ($theme) ? $theme : 'emailer.tpl';
+            $theme = $data['theme'] ?: $theme;
+            $theme = $this->findTemplate($theme, $locale);
 
-        if (file_exists($filename)) {
-            if (file_exists($template)) {
-                $emailTemplate = $this->get('engine')->create($template, $tags)->render();
+            if ($theme) {
+                $emailTemplate = $this->get('engine')->create($theme, $tags)->render();
             }
 
-            $filename       = str_replace('.html', '.tpl', $filename);
-            $html           = $this->get('engine')->create($filename, $tags)->render();
+            $html           = $this->get('engine')->create($template, $tags)->render();
             $return['text'] = $html;
 
             //key for backup
@@ -304,6 +335,38 @@ class Email extends Helper
         }
 
         return $return;
+    }
+
+    /**
+     * Locate the email template in configured locations.
+     *
+     * @param string $filename Template Names
+     * @param string $locale   Language
+     *
+     * @return string
+     */
+    protected function findTemplate($filename, $locale = 'en')
+    {
+        $locations   = [];
+        $locations[] = $this->app->getPath('email');
+
+        $locations = array_merge($this->config['templates'], $locations);
+
+        $extensions = ['.tpl', '.twig', '.html'];
+        $filename   = strstr($filename, '.', true);
+
+        foreach ($locations as $location) {
+            foreach ($extensions as $extension) {
+                $file = $location.DS.$locale.DS.$filename.$extension;
+                if (file_exists($file)) {
+                    return $file;
+                }
+
+                if (file_exists($file = $location.DS.$filename.$extension)) {
+                    return $file;
+                }
+            }
+        }
     }
 
     protected function replace($vars = [], $html = null)
@@ -327,10 +390,18 @@ class Email extends Helper
         return $vars;
     }
 
+    /**
+     * Log the sent mails.
+     *
+     * @param array $data   Email details
+     * @param bool  $status Mail delivery status
+     *
+     * @return boolen
+     */
     protected function logMail($data = [], $status = true)
     {
         //log enable
-        if (!$this->config('mail.log') || $data['log'] === false) {
+        if (!$this->config['log'] || $data['log'] === false) {
             return true;
         }
 
@@ -354,6 +425,6 @@ class Email extends Helper
         $save['reason']     = $data['reason'];
         $save['status']     = ($status) ? 1 : 0;
 
-        $this->database->save('#__addon_email_logs', $save);
+        return $this->database->save('#__addon_email_logs', $save);
     }
 }
